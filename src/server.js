@@ -7,6 +7,10 @@ const connectDB= require("./config/db")
 
 const authRoutes = require("./routes/authRoutes");
 
+const householdRoutes = require("./routes/householdRoutes");
+
+
+
 dotenv.config();
 connectDB()
  
@@ -29,3 +33,4 @@ app.listen(Port, ()=>
     console.log(`server running on port ${Port}`);
 });
 
+app.use("/api/households", householdRoutes);
