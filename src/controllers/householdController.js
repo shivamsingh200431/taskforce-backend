@@ -128,7 +128,35 @@ const joinHousehold = async (req, res) => {
     }
 };
 
+
+const getMyHouseholds = async (req, res) => {
+    try {
+
+        const memberships = await Membership.find({
+            userId: req.user._id
+        }).populate("householdId");
+
+        const households = memberships.map((membership) => ({
+            id: membership.householdId._id,
+            name: membership.householdId.name,
+            role: membership.role
+        }));
+
+        res.status(200).json({
+            households
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
 module.exports = {
     createHousehold,
-    joinHousehold
+    joinHousehold,
+    getMyHouseholds
 };
