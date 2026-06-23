@@ -9,6 +9,8 @@ const authRoutes = require("./routes/authRoutes");
 
 const householdRoutes = require("./routes/householdRoutes");
 
+const choreRoutes = require("./routes/choreRoutes");
+
 
 
 dotenv.config();
@@ -34,3 +36,5 @@ app.listen(Port, ()=>
 });
 
 app.use("/api/households", householdRoutes);
+
+app.use("/api/chores", choreRoutes);
