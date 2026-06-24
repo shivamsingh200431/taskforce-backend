@@ -64,10 +64,25 @@ const choreSchema = new mongoose.Schema(
             default: "approved"
         },
 
+        source: {
+            type: String,
+            enum: [
+                "admin-assigned",
+                "member-submitted"
+            ],
+            required: true
+        },
+
+        feedback: {
+            type: String,
+            default: ""
+        },
+
         dueDate: {
             type: Date
         }
     },
+
     {
         timestamps: true
     }
