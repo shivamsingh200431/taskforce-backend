@@ -3,7 +3,8 @@ const express = require("express");
 const {
     createChore,
     getChores,
-    approveChore
+    approveChore,
+    rejectChore
 } = require("../controllers/choreController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -27,5 +28,11 @@ router.patch(
     authMiddleware,
     approveChore
 );
+
+router.patch(
+    "/:id/reject",
+    authMiddleware,
+    rejectChore
+)
 
 module.exports = router;

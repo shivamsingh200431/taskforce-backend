@@ -275,10 +275,63 @@ const approveChore = async (req, res) => {
         });
 
     }
+}; 
+
+const rejectChore = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { feedback } = req.body;
+
+        const chore = await Chore.findById(id);
+
+        if (!chore) {
+            return res.status(404).json({
+                message: "Chore not found"
+            });
+        }
+
+        const admin = await isAdmin(
+            req.user._id,
+            chore.householdId
+        );
+
+        if (!admin) {
+            return res.status(403).json({
+                message: "Admin access required"
+            });
+        }
+
+        if (chore.approvalStatus !== "pending") {
+            return res.status(400).json({
+                message: "Chore has already been reviewed"
+            });
+        }
+
+        chore.approvalStatus = "rejected";
+
+        if (feedback) {
+            chore.feedback = feedback;
+        }
+
+        await chore.save();
+
+        res.status(200).json({
+            message: "Chore rejected successfully",
+            chore
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Server error"
+        });
+    }
 };
 
 module.exports = {
     createChore,
     getChores,
-    approveChore
+    approveChore,
+    rejectChore
 };
