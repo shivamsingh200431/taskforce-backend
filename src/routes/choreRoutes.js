@@ -4,7 +4,8 @@ const {
     createChore,
     getChores,
     approveChore,
-    rejectChore
+    rejectChore,
+    completeChore
 } = require("../controllers/choreController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -30,9 +31,9 @@ router.patch(
 );
 
 router.patch(
-    "/:id/reject",
+    "/:id/complete",
     authMiddleware,
-    rejectChore
-)
+    completeChore
+);
 
 module.exports = router;

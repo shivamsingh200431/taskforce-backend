@@ -329,9 +329,61 @@ const rejectChore = async (req, res) => {
     }
 };
 
+const completeChore = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const chore = await Chore.findById(id);
+
+        if (!chore) {
+            return res.status(404).json({
+                message: "Chore not found"
+            });
+        }
+
+        // Only the assigned member can complete the chore
+        if (!chore.assignedTo.equals(req.user._id)) {
+            return res.status(403).json({
+                message: "Only the assigned member can complete this chore."
+            });
+        }
+
+        // Chore must already be approved
+        if (chore.approvalStatus !== "approved") {
+            return res.status(400).json({
+                message: "This chore is not approved."
+            });
+        }
+
+        // Prevent duplicate completion
+        if (chore.status === "completed") {
+            return res.status(400).json({
+                message: "This chore has already been completed."
+            });
+        }
+
+        chore.status = "completed";
+
+        await chore.save();
+
+        return res.status(200).json({
+            message: "Chore marked as completed successfully.",
+            chore
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        return res.status(500).json({
+            message: "Server error"
+        });
+    }
+};
+
 module.exports = {
     createChore,
     getChores,
     approveChore,
-    rejectChore
+    rejectChore,
+    completeChore
 };
