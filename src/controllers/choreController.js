@@ -157,7 +157,7 @@ const getChores = async (req, res) => {
 
                 choreType: chore.choreType,
 
-                status: chore.status,
+                completionStatus: chore.completionStatus,
 
                 approvalStatus:
                     chore.approvalStatus,
@@ -237,12 +237,12 @@ const approveChore = async (req, res) => {
             chore.description = description;
         }
 
-        if (approvedDifficulty) {
+        if (approvedDifficulty !== undefined) {
             chore.approvedDifficulty =
                 approvedDifficulty;
         }
 
-        if (feedback) {
+        if (feedback !== undefined) {
             chore.feedback = feedback;
         }
 
@@ -252,7 +252,7 @@ const approveChore = async (req, res) => {
             chore.source === "member-submitted"
         ) {
 
-            chore.status =
+            chore.completionStatus =
                 needsImprovement
                     ? "pending"
                     : "completed";
@@ -356,13 +356,13 @@ const completeChore = async (req, res) => {
         }
 
         // Prevent duplicate completion
-        if (chore.status === "completed") {
+        if (chore.completionStatus !== "pending") {
             return res.status(400).json({
                 message: "This chore has already been completed."
             });
         }
 
-        chore.status = "completed";
+        chore.completionStatus = "completed";
 
         await chore.save();
 

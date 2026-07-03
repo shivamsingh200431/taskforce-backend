@@ -40,7 +40,7 @@ const choreSchema = new mongoose.Schema(
             required: true
         },
 
-        status: {
+        completionStatus: {
             type: String,
             enum: ["pending", "completed", "missed"],
             default: "pending"
