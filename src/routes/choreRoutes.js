@@ -31,6 +31,12 @@ router.patch(
 );
 
 router.patch(
+    "/:id/reject",
+    authMiddleware,
+    rejectChore
+);
+
+router.patch(
     "/:id/complete",
     authMiddleware,
     completeChore
