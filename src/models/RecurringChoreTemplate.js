@@ -7,6 +7,15 @@ import {
     MONTHLY_RULE,
 } from "../constants/chore.constants.js";
 
+import { 
+    CHORE_DIFFICULTY,
+    //DIFFICULTY_POINTS,
+} from "../constants/metadata.constants.js";
+
+import {
+    REMINDER_UNIT,
+} from "../constants/notification.constants.js";
+
 // ==========================================
 // Schedule Schema
 // ==========================================
@@ -296,7 +305,58 @@ const assignmentSchema = new mongoose.Schema(
 // ==========================================
 
 const metadataSchema = new mongoose.Schema(
-    {},
+    {
+        category: {
+            type: String,
+            enum: Object.values(CHORE_CATEGORY),
+            required: true,
+        },
+        difficulty: {
+            type: Number,
+            enum: Object.values(CHORE_DIFFICULTY),
+            required: true,
+            default: CHORE_DIFFICULTY.MEDIUM,
+        },
+        estimatedDuration: {
+            type: Number,
+            min: 1,
+            required: true,
+        },
+        tags: {
+            type: [
+                {
+                    type: String,
+                    trim: true,
+                    lowercase: true,
+                },
+            ],
+            default: [],
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
+
+// ==========================================
+// Reminder Offset Schema
+// ==========================================
+
+const reminderOffsetSchema = new mongoose.Schema(
+    {
+        value: {
+            type: Number,
+            min: 1,
+            default: null,
+        },
+
+        unit: {
+            type: String,
+            enum: Object.values(REMINDER_UNIT),
+            default: null,
+        },
+    },
     {
         _id: false,
     }
@@ -307,9 +367,142 @@ const metadataSchema = new mongoose.Schema(
 // Notification Schema
 // ==========================================
 
-
 const notificationSchema = new mongoose.Schema(
-    {},
+    {
+        enabled: {
+            type: Boolean,
+            default: true,
+        },
+
+        reminderOffset: {
+            type: reminderOffsetSchema,
+            default: () => ({}),
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
+
+// ==========================================
+// Notification Validation Helpers
+// ==========================================
+
+const validateNotification = (notification) => {
+
+    if (notification.enabled) {
+
+        if (notification.reminderOffset.value == null) {
+            invalidateField(
+                notification,
+                "reminderOffset.value",
+                "Reminder value is required when notifications are enabled."
+            );
+        }
+
+        if (notification.reminderOffset.unit == null) {
+            invalidateField(
+                notification,
+                "reminderOffset.unit",
+                "Reminder unit is required when notifications are enabled."
+            );
+        }
+
+    } else {
+
+        if (notification.reminderOffset.value != null) {
+            invalidateField(
+                notification,
+                "reminderOffset.value",
+                "Reminder value must not be provided when notifications are disabled."
+            );
+        }
+
+        if (notification.reminderOffset.unit != null) {
+            invalidateField(
+                notification,
+                "reminderOffset.unit",
+                "Reminder unit must not be provided when notifications are disabled."
+            );
+        }
+
+    }
+
+};
+
+
+// ==========================================
+// Notification Validation Middleware
+// ==========================================
+
+notificationSchema.pre("validate", function (next) {
+
+    validateNotification(this);
+
+    next();
+
+});
+
+// ==========================================
+// Active Period Schema
+// ==========================================
+
+const activePeriodSchema = new mongoose.Schema(
+    {
+        startsAt: {
+            type: Date,
+            required: true,
+            default: Date.now,
+        },
+        endsAt: {
+            type: Date,
+            default: null,
+        },
+    },
+    {
+        _id: false,
+    }
+);
+
+// ==========================================
+// Active Period Validation Helpers
+// ==========================================
+
+const validateActivePeriod = (activePeriod) => {
+    if (activePeriod.endsAt !== null && 
+        activePeriod.endsAt < activePeriod.startsAt
+    ) {
+        invalidateField(activePeriod, "endsAt", 
+            "End date cannot be before start date."
+        );
+    }
+};
+
+// ==========================================
+// Active Period Validation Middleware
+// ==========================================
+
+activePeriodSchema.pre("validate", function (next) {
+    validateActivePeriod(this);
+    next();
+});
+
+// ==========================================
+// Scheduler Metadata Schema
+// ==========================================
+
+const schedulerMetadataSchema = new mongoose.Schema(
+    {
+        nextRunAt: {
+            type: Date,
+            required: true,
+        },
+        lastProcessedAt: {
+            type: Date,
+            default: null,
+        },
+    },
     {
         _id: false,
     }
@@ -367,10 +560,49 @@ const recurringChoreTemplateSchema = new mongoose.Schema(
             type: notificationSchema,
             default: () => ({}),
         },
+        activePeriod: {
+            type: activePeriodSchema,
+            default: () => ({}),
+        },
+        schedulerMetadata: {
+            type: schedulerMetadataSchema,
+            default: () => ({}),
+        },
     },
     {
         timestamps: true,
     }
+);
+
+// ==========================================
+// Indexes
+// ==========================================
+
+// Scheduler queries
+recurringChoreTemplateSchema.index({
+            "schedulerMetadata.nextRunAt": 1,
+        });
+
+// Templates created by a user
+recurringChoreTemplateSchema.index({
+            createdBy: 1,
+        });
+
+// Active templates within a household
+recurringChoreTemplateSchema.index({
+            householdId: 1,
+            "activePeriod.endsAt": 1,
+        });
+
+// Prevent duplicate recurring chore titles within a household
+recurringChoreTemplateSchema.index(
+        {
+            householdId: 1,
+            title: 1,
+        },
+        {
+            unique: true,
+        }
 );
 
 

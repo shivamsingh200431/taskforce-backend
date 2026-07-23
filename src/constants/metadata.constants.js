@@ -1,0 +1,16 @@
+export const CHORE_DIFFICULTY = Object.freeze({
+    VERY_EASY: 1,
+    EASY: 2,
+    MEDIUM: 3,
+    HARD: 4,
+    VERY_HARD: 5,
+});
+
+export const DIFFICULTY_POINTS = Object.freeze({
+    [CHORE_DIFFICULTY.VERY_EASY]: 10,
+    [CHORE_DIFFICULTY.EASY]: 20,
+    [CHORE_DIFFICULTY.MEDIUM]: 30,
+    [CHORE_DIFFICULTY.HARD]: 40,
+    [CHORE_DIFFICULTY.VERY_HARD]: 50,
+});
+
