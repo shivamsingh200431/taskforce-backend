@@ -94,3 +94,14 @@ export const HISTORY_ACTIONS = Object.freeze({
     ATTACHMENT_ADDED: "attachmentAdded",
     ATTACHMENT_DELETED: "attachmentDeleted",
 });
+
+
+export const WEEKDAY = Object.freeze({
+    SUNDAY: 0,
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+});
