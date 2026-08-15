@@ -76,3 +76,92 @@ export const getWeekStart = (calendarDate) => {
         -weekday
     );
 };
+
+// ==========================================
+// Get Month Start
+// ==========================================
+
+export const getMonthStart = (calendarDate) => {
+    const date = new Date(
+        `${calendarDate}T00:00:00Z`
+    );
+
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+
+    return [
+        year,
+        String(month + 1).padStart(2, "0"),
+        "01",
+    ].join("-");
+};
+
+// ==========================================
+// Get Last Day Of Month
+// ==========================================
+
+export const getLastDayOfMonth = (calendarDate) => {
+    const date = new Date(
+        `${calendarDate}T00:00:00Z`
+    );
+
+    const year = date.getUTCFullYear();
+    const month = date.getUTCMonth();
+
+    const lastDay = new Date(
+        Date.UTC(
+            year,
+            month + 1,
+            0
+        )
+    );
+
+    return [
+        lastDay.getUTCFullYear(),
+        String(
+            lastDay.getUTCMonth() + 1
+        ).padStart(2, "0"),
+        String(
+            lastDay.getUTCDate()
+        ).padStart(2, "0"),
+    ].join("-");
+};
+
+// ==========================================
+// Get Year Start
+// ==========================================
+
+export const getYearStart = (calendarDate) => {
+    const date = new Date(
+        `${calendarDate}T00:00:00Z`
+    );
+
+    return `${date.getUTCFullYear()}-01-01`;
+};
+
+// ==========================================
+// Add Calendar Years
+// ==========================================
+
+export const addCalendarYears = (
+    calendarDate,
+    years
+) => {
+    const date = new Date(
+        `${calendarDate}T00:00:00Z`
+    );
+
+    date.setUTCFullYear(
+        date.getUTCFullYear() + years
+    );
+
+    return [
+        date.getUTCFullYear(),
+        String(
+            date.getUTCMonth() + 1
+        ).padStart(2, "0"),
+        String(
+            date.getUTCDate()
+        ).padStart(2, "0"),
+    ].join("-");
+};

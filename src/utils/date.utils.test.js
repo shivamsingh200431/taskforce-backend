@@ -4,6 +4,10 @@ import {
     addCalendarDays,
     isSameCalendarDate,
     getWeekStart,
+    getMonthStart,
+    getLastDayOfMonth,
+    getYearStart,
+    addCalendarYears,
 } from "./date.utils.js";
 
 // ==========================================
@@ -130,6 +134,169 @@ const saturdayWeekStart = getWeekStart(
 console.assert(
     saturdayWeekStart === "2026-08-09",
     `Expected 2026-08-09, received ${saturdayWeekStart}`
+);
+
+// ==========================================
+// Test 10: Get Month Start
+// ==========================================
+
+const augustMonthStart = getMonthStart(
+    "2026-08-17"
+);
+
+console.assert(
+    augustMonthStart === "2026-08-01",
+    `Expected 2026-08-01, received ${augustMonthStart}`
+);
+
+// ==========================================
+// Test 11: Get Month Start - First Day
+// ==========================================
+
+const firstDayMonthStart = getMonthStart(
+    "2026-08-01"
+);
+
+console.assert(
+    firstDayMonthStart === "2026-08-01",
+    `Expected 2026-08-01, received ${firstDayMonthStart}`
+);
+
+// ==========================================
+// Test 12: Get Last Day - 31-Day Month
+// ==========================================
+
+const augustLastDay = getLastDayOfMonth(
+    "2026-08-17"
+);
+
+console.assert(
+    augustLastDay === "2026-08-31",
+    `Expected 2026-08-31, received ${augustLastDay}`
+);
+
+// ==========================================
+// Test 13: Get Last Day - 30-Day Month
+// ==========================================
+
+const septemberLastDay = getLastDayOfMonth(
+    "2026-09-17"
+);
+
+console.assert(
+    septemberLastDay === "2026-09-30",
+    `Expected 2026-09-30, received ${septemberLastDay}`
+);
+
+// ==========================================
+// Test 14: Get Last Day - Non-Leap February
+// ==========================================
+
+const februaryLastDay = getLastDayOfMonth(
+    "2026-02-17"
+);
+
+console.assert(
+    februaryLastDay === "2026-02-28",
+    `Expected 2026-02-28, received ${februaryLastDay}`
+);
+
+// ==========================================
+// Test 15: Get Last Day - Leap Year
+// ==========================================
+
+const leapYearLastDay = getLastDayOfMonth(
+    "2028-02-17"
+);
+
+console.assert(
+    leapYearLastDay === "2028-02-29",
+    `Expected 2028-02-29, received ${leapYearLastDay}`
+);
+
+// ==========================================
+// Test 16: Get Year Start
+// ==========================================
+
+const yearStart = getYearStart(
+    "2026-08-15"
+);
+
+console.assert(
+    yearStart === "2026-01-01",
+    `Expected 2026-01-01, received ${yearStart}`
+);
+
+// ==========================================
+// Test 17: Get Year Start - First Day
+// ==========================================
+
+const firstDayYearStart = getYearStart(
+    "2026-01-01"
+);
+
+console.assert(
+    firstDayYearStart === "2026-01-01",
+    `Expected 2026-01-01, received ${firstDayYearStart}`
+);
+
+// ==========================================
+// Test 18: Get Year Start - Leap Year
+// ==========================================
+
+const leapYearStart = getYearStart(
+    "2028-02-29"
+);
+
+console.assert(
+    leapYearStart === "2028-01-01",
+    `Expected 2028-01-01, received ${leapYearStart}`
+);
+
+// ==========================================
+// Test 19: Add Calendar Years
+// ==========================================
+
+const nextYear = addCalendarYears(
+    "2026-08-15",
+    1
+);
+
+console.assert(
+    nextYear === "2027-08-15",
+    `Expected 2027-08-15, received ${nextYear}`
+);
+
+// ==========================================
+// Test 20: Add Multiple Calendar Years
+// ==========================================
+
+const futureDate = addCalendarYears(
+    "2026-08-15",
+    5
+);
+
+console.assert(
+    futureDate === "2031-08-15",
+    `Expected 2031-08-15, received ${futureDate}`
+);
+
+// ==========================================
+// Test 21: Leap Year Boundary
+// ==========================================
+
+const leapYearDate = addCalendarYears(
+    "2028-02-29",
+    1
+);
+
+console.assert(
+    leapYearDate === "2029-03-01",
+    `Expected 2029-03-01, received ${leapYearDate}`
+);
+
+console.log(
+    "✅ Year utility tests passed."
 );
 
 console.log("✅ All date utility tests passed.");
