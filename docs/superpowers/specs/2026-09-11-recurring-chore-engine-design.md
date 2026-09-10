@@ -1,9 +1,5 @@
 # Recurring Chore Engine Design
 
-## Status
-
-Design approved in conversation; implementation has not started.
-
 ## Goal
 
 Build a reliable recurring-chore subsystem that turns recurring templates into historical `Chore` instances while supporting workload-aware rotation, scheduler recovery, and safe operation across multiple application instances.
