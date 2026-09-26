@@ -70,6 +70,37 @@ const completeClaim = async (
     );
 };
 
+const startSchedulerLoop = ({
+    runTick = runSchedulerTick,
+    intervalMs = require("../config/recurringScheduler.config.cjs").SCHEDULER_INTERVAL_MS,
+    setIntervalFn = setInterval,
+    nowFn = () => new Date()
+} = {}) => {
+    let running = false;
+
+    const tick = async () => {
+        if (running) {
+            return;
+        }
+
+        running = true;
+
+        try {
+            await runTick(nowFn());
+        } catch (error) {
+            console.error("Recurring scheduler tick failed:", error);
+        } finally {
+            running = false;
+        }
+    };
+
+    const timer = setIntervalFn(tick, intervalMs);
+    return {
+        timer,
+        stop: () => clearInterval(timer)
+    };
+};
+
 const runSchedulerTick = async (
     now = new Date(),
     {
@@ -147,5 +178,6 @@ const runSchedulerTick = async (
 module.exports = {
     claimTemplate,
     completeClaim,
-    runSchedulerTick
+    runSchedulerTick,
+    startSchedulerLoop
 };
