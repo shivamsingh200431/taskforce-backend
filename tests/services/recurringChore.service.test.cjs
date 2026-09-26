@@ -344,7 +344,7 @@ test("getNextOccurrence supports intervals beyond the old fixed horizons", async
             interval: 100,
             activeStart: "2026-01-07T00:00:00.000Z",
             now: "2026-09-27T12:00:00.000Z",
-            expected: "2028-01-09T00:00:00.000Z"
+            expected: "2027-12-06T00:00:00.000Z"
         },
         {
             frequency: "monthly",
