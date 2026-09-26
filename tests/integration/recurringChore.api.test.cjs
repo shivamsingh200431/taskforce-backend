@@ -227,12 +227,53 @@ describeIntegration("Recurring chore API integration", async (t) => {
             householdId: ids.householdId,
             role: "admin"
         });
+        const memberMembership = await Membership.findOne({
+            householdId: ids.householdId,
+            role: "member"
+        });
         const adminToken = makeToken(adminMembership.userId);
+        const memberToken = makeToken(memberMembership.userId);
         const template = await RecurringChoreTemplate.findOne({
             householdId: ids.householdId
         });
 
         assert.ok(template);
+
+        const forbiddenUpdate = await request(
+            `/api/recurring-chores/${template._id}`,
+            {
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${memberToken}` },
+                body: JSON.stringify({
+                    description: "Member must not update recurring templates"
+                })
+            }
+        );
+
+        assert.equal(forbiddenUpdate.response.status, 403);
+
+        const forbiddenGenerate = await request(
+            `/api/recurring-chores/${template._id}/generate`,
+            {
+                method: "POST",
+                headers: { Authorization: `Bearer ${memberToken}` },
+                body: JSON.stringify({
+                    occurrenceDate: "2026-09-27"
+                })
+            }
+        );
+
+        assert.equal(forbiddenGenerate.response.status, 403);
+
+        const forbiddenDelete = await request(
+            `/api/recurring-chores/${template._id}`,
+            {
+                method: "DELETE",
+                headers: { Authorization: `Bearer ${memberToken}` }
+            }
+        );
+
+        assert.equal(forbiddenDelete.response.status, 403);
 
         const update = await request(
             `/api/recurring-chores/${template._id}`,
