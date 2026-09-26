@@ -227,6 +227,30 @@ describeIntegration("Recurring chore API integration", async (t) => {
             "Updated recurring description"
         );
 
+        const scheduleUpdate = await request(
+            `/api/recurring-chores/${template._id}`,
+            {
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${adminToken}` },
+                body: JSON.stringify({
+                    schedule: {
+                        frequency: "daily",
+                        interval: 2,
+                        weekdays: [],
+                        dayOfMonth: null,
+                        month: null,
+                        monthlyRule: null
+                    }
+                })
+            }
+        );
+
+        assert.equal(scheduleUpdate.response.status, 200);
+        assert.equal(
+            scheduleUpdate.body.template.schedulerMetadata.nextRunAt,
+            "2026-09-28T00:00:00.000Z"
+        );
+
         const generate = await request(
             `/api/recurring-chores/${template._id}/generate`,
             {
