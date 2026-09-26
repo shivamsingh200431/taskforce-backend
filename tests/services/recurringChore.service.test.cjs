@@ -36,11 +36,11 @@ const template = {
 
 test("normalizes utility date strings and Date values to Date instances", () => {
     assert.equal(
-        normalizeOccurrenceDate("2026-09-26"),
+        normalizeOccurrenceDate("2026-09-26").getTime(),
         new Date("2026-09-26T00:00:00.000Z").getTime()
     );
     assert.equal(
-        normalizeOccurrenceDate(new Date("2026-09-26T00:00:00.000Z")),
+        normalizeOccurrenceDate(new Date("2026-09-26T00:00:00.000Z")).getTime(),
         new Date("2026-09-26T00:00:00.000Z").getTime()
     );
 });
