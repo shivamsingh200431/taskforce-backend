@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const RECURRING_GENERATION_TYPES = [
     "normal",
@@ -130,4 +130,4 @@ choreSchema.index(
     }
 );
 
-module.exports = mongoose.model("Chore", choreSchema);
+export default mongoose.model("Chore", choreSchema);
