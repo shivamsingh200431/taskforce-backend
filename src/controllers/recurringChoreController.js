@@ -122,8 +122,7 @@ const updateRecurringChore = async (req, res) => {
         ];
 
         const scheduleChanged = req.body.schedule !== undefined;
-        const activePeriodStartChanged =
-            req.body.activePeriod?.startsAt !== undefined;
+        const activePeriodChanged = req.body.activePeriod !== undefined;
 
         for (const field of allowed) {
             if (req.body[field] !== undefined) {
@@ -131,7 +130,7 @@ const updateRecurringChore = async (req, res) => {
             }
         }
 
-        if (scheduleChanged || activePeriodStartChanged) {
+        if (scheduleChanged || activePeriodChanged) {
             const nextRunAt = await getNextOccurrence(
                 template,
                 new Date()
