@@ -161,6 +161,38 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         assert.ok(saved.schedulerMetadata.nextRunAt > new Date("2026-09-26T12:00:00.000Z"));
     });
 
+    await t.test("scheduler persists null when the template has no future occurrence", async () => {
+        const template = makeTemplate({
+            _id: new mongoose.Types.ObjectId(),
+            title: "Final occurrence " + crypto.randomUUID().slice(0, 8),
+            activePeriod: {
+                startsAt: new Date("2026-09-26T00:00:00.000Z"),
+                endsAt: new Date("2026-09-26T23:59:59.000Z")
+            },
+            schedulerMetadata: {
+                nextRunAt: new Date("2026-09-26T00:00:00.000Z"),
+                lastProcessedAt: null,
+                processingLeaseUntil: null
+            }
+        });
+
+        await RecurringChoreTemplate.create(template);
+
+        const result = await runSchedulerTick(
+            new Date("2026-09-26T12:00:00.000Z"),
+            { TemplateModel: RecurringChoreTemplate }
+        );
+
+        assert.ok(result.processed >= 1);
+
+        const saved = await RecurringChoreTemplate.findById(template._id).lean();
+
+        assert.ok(saved);
+        assert.equal(saved.schedulerMetadata.nextRunAt, null);
+        assert.equal(saved.schedulerMetadata.processingLeaseUntil, null);
+        assert.ok(saved.schedulerMetadata.lastProcessedAt instanceof Date);
+    });
+
     t.after(async () => {
         await Chore?.deleteMany({ householdId: ids.householdId });
         await Membership?.deleteMany({ householdId: ids.householdId });
