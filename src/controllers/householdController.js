@@ -1,5 +1,5 @@
-const Household = require("../models/Household");
-const Membership = require("../models/Membership");
+import Household from "../models/Household.js";
+import Membership from "../models/Membership.js";
 
 const createHousehold = async (req, res) => {
     try {
@@ -29,7 +29,6 @@ const createHousehold = async (req, res) => {
         }
 
         const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
         let inviteCode = "";
 
         for (let i = 0; i < 8; i++) {
@@ -51,24 +50,18 @@ const createHousehold = async (req, res) => {
         });
 
         res.status(201).json({
-    message: "Household created successfully",
-    household: {
-        id: household._id,
-        name: household.name,
-        inviteCode: household.inviteCode
-    }
-});
-
+            message: "Household created successfully",
+            household: {
+                id: household._id,
+                name: household.name,
+                inviteCode: household.inviteCode
+            }
+        });
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
+        res.status(500).json({ message: "Server error" });
     }
 };
-
-
 
 const joinHousehold = async (req, res) => {
     try {
@@ -118,20 +111,14 @@ const joinHousehold = async (req, res) => {
                 name: household.name
             }
         });
-
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-
 const getMyHouseholds = async (req, res) => {
     try {
-
         const memberships = await Membership.find({
             userId: req.user._id
         }).populate("householdId");
@@ -142,20 +129,14 @@ const getMyHouseholds = async (req, res) => {
             role: membership.role
         }));
 
-        res.status(200).json({
-            households
-        });
-
+        res.status(200).json({ households });
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
-module.exports = {
+export {
     createHousehold,
     joinHousehold,
     getMyHouseholds

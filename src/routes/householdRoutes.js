@@ -1,19 +1,15 @@
-const express = require("express");
-
-const {
+import express from "express";
+import {
     createHousehold,
     joinHousehold,
     getMyHouseholds
-} = require("../controllers/householdController");
-
-const authMiddleware = require("../middleware/authMiddleware");
+} from "../controllers/householdController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
 router.post("/", authMiddleware, createHousehold);
-
 router.post("/join", authMiddleware, joinHousehold);
-
 router.get("/me", authMiddleware, getMyHouseholds);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,10 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
+
+const RECURRING_GENERATION_TYPES = [
+    "normal",
+    "recovery",
+    "manual"
+];
 
 const choreSchema = new mongoose.Schema(
     {
@@ -40,9 +46,32 @@ const choreSchema = new mongoose.Schema(
             required: true
         },
 
+        recurringTemplateId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "RecurringChoreTemplate",
+            required: function () {
+                return this.choreType === "recurring";
+            }
+        },
+
+        occurrenceDate: {
+            type: Date,
+            required: function () {
+                return this.choreType === "recurring";
+            }
+        },
+
+        generationType: {
+            type: String,
+            enum: RECURRING_GENERATION_TYPES,
+            required: function () {
+                return this.choreType === "recurring";
+            }
+        },
+
         completionStatus: {
             type: String,
-            enum: ["pending", "completed", "missed"],
+            enum: ["pending", "completed", "missed", "overdue"],
             default: "pending"
         },
 
@@ -88,4 +117,31 @@ const choreSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Chore", choreSchema);
+choreSchema.index(
+    {
+        recurringTemplateId: 1,
+        occurrenceDate: 1
+    },
+    {
+        unique: true,
+        partialFilterExpression: {
+            choreType: "recurring"
+        }
+    }
+);
+
+choreSchema.index({
+    householdId: 1,
+    assignedTo: 1,
+    approvalStatus: 1,
+    completionStatus: 1
+});
+
+choreSchema.index({
+    householdId: 1,
+    assignedTo: 1,
+    approvalStatus: 1,
+    createdAt: -1
+});
+
+export default mongoose.model("Chore", choreSchema);

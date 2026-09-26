@@ -1,0 +1,9 @@
+const SCHEDULER_LEASE_MS = 5 * 60 * 1000;
+const MAX_CATCH_UP_DAYS = 30;
+const SCHEDULER_INTERVAL_MS = 60 * 1000;
+
+module.exports = {
+    SCHEDULER_LEASE_MS,
+    MAX_CATCH_UP_DAYS,
+    SCHEDULER_INTERVAL_MS
+};

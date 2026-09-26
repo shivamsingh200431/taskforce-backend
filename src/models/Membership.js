@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose";
 
 const membershipSchema = new mongoose.Schema(
     {
@@ -25,4 +25,4 @@ const membershipSchema = new mongoose.Schema(
     }
 );
 
-module.exports = mongoose.model("Membership", membershipSchema);
+export default mongoose.model("Membership", membershipSchema);

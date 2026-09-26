@@ -1,45 +1,19 @@
-const express = require("express");
-
-const {
+import express from "express";
+import {
     createChore,
     getChores,
     approveChore,
     rejectChore,
     completeChore
-} = require("../controllers/choreController");
-
-const authMiddleware = require("../middleware/authMiddleware");
+} from "../controllers/choreController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-router.post(
-    "/",
-    authMiddleware,
-    createChore
-);
+router.post("/", authMiddleware, createChore);
+router.get("/", authMiddleware, getChores);
+router.patch("/:id/approve", authMiddleware, approveChore);
+router.patch("/:id/reject", authMiddleware, rejectChore);
+router.patch("/:id/complete", authMiddleware, completeChore);
 
-router.get(
-    "/",
-    authMiddleware,
-    getChores
-);
-
-router.patch(
-    "/:id/approve",
-    authMiddleware,
-    approveChore
-);
-
-router.patch(
-    "/:id/reject",
-    authMiddleware,
-    rejectChore
-);
-
-router.patch(
-    "/:id/complete",
-    authMiddleware,
-    completeChore
-);
-
-module.exports = router;
+export default router;

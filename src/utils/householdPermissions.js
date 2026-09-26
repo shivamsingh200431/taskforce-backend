@@ -1,6 +1,6 @@
-const Membership = require("../models/Membership");
+import Membership from "../models/Membership.js";
 
-const isMember = async (userId, householdId) => {
+export const isMember = async (userId, householdId) => {
     const membership = await Membership.findOne({
         userId,
         householdId
@@ -9,20 +9,11 @@ const isMember = async (userId, householdId) => {
     return !!membership;
 };
 
-const isAdmin = async (userId, householdId) => {
+export const isAdmin = async (userId, householdId) => {
     const membership = await Membership.findOne({
         userId,
         householdId
     });
 
-    if (!membership) {
-        return false;
-    }
-
-    return membership.role === "admin";
-};
-
-module.exports = {
-    isMember,
-    isAdmin
+    return !!membership && membership.role === "admin";
 };
