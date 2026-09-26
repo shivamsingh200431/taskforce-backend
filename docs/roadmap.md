@@ -16,26 +16,47 @@
 
 ## ✅ Sprint 3
 - Chore Management
+- Approval / rejection workflow
+- Chore completion lifecycle
 
 ---
 
-## 🚧 Sprint 5
-- Recurring Chores
-- Calendar Engine
-- Recovery Engine
-- Rotation Service
-- Notification Scheduler
+## 🟢 Sprint 5 — Recurring Chore Engine
+
+### Core implementation
+- Recurring chore templates
+- Daily / weekly / monthly / yearly recurrence
+- Historical Chore instances
+- Fixed assignment
+- Workload-aware rotation
+- Difficulty-weighted balancing
+- Manual / normal / recovery generation
+- Idempotent occurrence creation
+- Scheduler with atomic claims and leases
+- 30-day bounded catch-up
+- Failure isolation
+- Recurring chore API surface
+
+### Verification
+- Unit/service/model tests: 32/32 passing
+- MongoDB integration suite: added; run with TEST_MONGO_URI
+- API end-to-end verification: remaining
+- Final Sprint 5 release cleanup: remaining
 
 ---
 
 ## 🔜 Sprint 6
-- Analytics
-- Reports
-- Dashboard
+- Optional Proof Uploads
+- Notifications
+- Activity Feed
 
 ---
 
-## 🔮 Future Ideas
+## 🔮 Future
+- Leaderboards
+- Household Statistics
+- Difficulty Balancing
+- Monthly Reports
 - AI Suggestions
 - Smart Scheduling
 - Household Insights
