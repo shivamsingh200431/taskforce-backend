@@ -266,7 +266,12 @@ const getNextOccurrence = async (
     // Search through one complete recurrence cycle after the aligned
     // recurrence anchor. The horizon therefore scales with the configured
     // interval instead of imposing a fixed window that can miss large intervals.
-    const getSearchEndDate = (frequency, startDate, interval) => {
+    const getSearchEndDate = (
+        frequency,
+        startDate,
+        interval,
+        schedule
+    ) => {
         if (frequency === "daily") {
             const endDate = new Date(startDate.getTime());
             endDate.setUTCDate(endDate.getUTCDate() + interval);
@@ -285,6 +290,52 @@ const getNextOccurrence = async (
             const endDate = getMonthStart(startDate);
             const cycleCount = 12 / greatestCommonDivisor(interval, 12);
 
+            if (
+                schedule?.monthlyRule === "fixedDay" &&
+                schedule?.dayOfMonth === 29
+            ) {
+                let probeMonth = new Date(endDate.getTime());
+                let hasNonFebruaryMonth = false;
+                let hasValidDate = false;
+
+                for (let index = 0; index < cycleCount; index += 1) {
+                    const month = probeMonth.getUTCMonth();
+                    const lastDay = new Date(
+                        Date.UTC(
+                            probeMonth.getUTCFullYear(),
+                            month + 1,
+                            0
+                        )
+                    ).getUTCDate();
+
+                    if (month !== 1) {
+                        hasNonFebruaryMonth = true;
+                    }
+
+                    if (29 <= lastDay) {
+                        hasValidDate = true;
+                    }
+
+                    probeMonth.setUTCMonth(
+                        probeMonth.getUTCMonth() + interval
+                    );
+                }
+
+                if (!hasValidDate && !hasNonFebruaryMonth) {
+                    const yearlyInterval = interval / 12;
+                    const leapCycleYears =
+                        400 / greatestCommonDivisor(yearlyInterval, 400);
+
+                    endDate.setUTCMonth(
+                        endDate.getUTCMonth() +
+                        interval * leapCycleYears +
+                        1,
+                        0
+                    );
+                    return endDate;
+                }
+            }
+
             endDate.setUTCMonth(
                 endDate.getUTCMonth() + interval * cycleCount + 1,
                 0
@@ -293,7 +344,13 @@ const getNextOccurrence = async (
         }
 
         if (frequency === "yearly") {
-            const cycleCount = 4 / greatestCommonDivisor(interval, 4);
+            const isLeapDay =
+                schedule?.month === 2 &&
+                schedule?.dayOfMonth === 29;
+
+            const cycleCount = isLeapDay
+                ? 400 / greatestCommonDivisor(interval, 400)
+                : 4 / greatestCommonDivisor(interval, 4);
 
             return new Date(Date.UTC(
                 startDate.getUTCFullYear() + interval * cycleCount + 1,
@@ -342,7 +399,8 @@ const getNextOccurrence = async (
     const endDate = getSearchEndDate(
         template.schedule.frequency,
         horizonStart,
-        template.schedule.interval
+        template.schedule.interval,
+        template.schedule
     );
 
     if (template.activePeriod.endsAt) {
