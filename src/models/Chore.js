@@ -130,4 +130,18 @@ choreSchema.index(
     }
 );
 
+choreSchema.index({
+    householdId: 1,
+    assignedTo: 1,
+    approvalStatus: 1,
+    completionStatus: 1
+});
+
+choreSchema.index({
+    householdId: 1,
+    assignedTo: 1,
+    approvalStatus: 1,
+    createdAt: -1
+});
+
 export default mongoose.model("Chore", choreSchema);
