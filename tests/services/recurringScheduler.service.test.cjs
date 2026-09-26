@@ -31,6 +31,32 @@ test("atomic claim accepts a due template and sets a five-minute lease", async (
     assert.equal(received.options.returnDocument, "after");
 });
 
+test("atomic claim allows an expired lease to be recovered", async () => {
+    let received;
+
+    const model = {
+        findOneAndUpdate: async (filter) => {
+            received = filter;
+            return { _id: "template-1" };
+        }
+    };
+
+    const now = new Date("2026-09-26T10:00:00.000Z");
+
+    await claimTemplate("template-1", now, {
+        TemplateModel: model,
+        leaseMs: 5 * 60 * 1000
+    });
+
+    const leaseConditions =
+        received.$and[1].$or;
+
+    assert.deepEqual(leaseConditions, [
+        { "schedulerMetadata.processingLeaseUntil": null },
+        { "schedulerMetadata.processingLeaseUntil": { $lte: now } }
+    ]);
+});
+
 test("completion only clears a lease that still belongs to the claim", async () => {
     let received;
 
