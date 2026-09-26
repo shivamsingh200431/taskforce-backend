@@ -506,6 +506,62 @@ test("getNextOccurrence searches past invalid yearly calendar dates", async () =
     );
 });
 
+test("getNextOccurrence handles a monthly February 29 recurrence across leap cycles", async () => {
+    const monthlyTemplate = {
+        ...template,
+        schedule: {
+            frequency: "monthly",
+            interval: 12,
+            weekdays: [],
+            dayOfMonth: 29,
+            month: null,
+            monthlyRule: "fixedDay"
+        },
+        activePeriod: {
+            startsAt: new Date("2026-02-01T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const result = await getNextOccurrence(
+        monthlyTemplate,
+        new Date("2028-03-01T12:00:00.000Z")
+    );
+
+    assert.equal(
+        result.toISOString(),
+        "2032-02-29T00:00:00.000Z"
+    );
+});
+
+test("getNextOccurrence handles a yearly February 29 recurrence across century years", async () => {
+    const yearlyTemplate = {
+        ...template,
+        schedule: {
+            frequency: "yearly",
+            interval: 4,
+            weekdays: [],
+            dayOfMonth: 29,
+            month: 2,
+            monthlyRule: null
+        },
+        activePeriod: {
+            startsAt: new Date("2096-02-29T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const result = await getNextOccurrence(
+        yearlyTemplate,
+        new Date("2097-03-01T12:00:00.000Z")
+    );
+
+    assert.equal(
+        result.toISOString(),
+        "2104-02-29T00:00:00.000Z"
+    );
+});
+
 test("getNextOccurrence returns null after the active period ends", async () => {
     const endedTemplate = {
         ...template,
