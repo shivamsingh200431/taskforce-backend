@@ -1,19 +1,14 @@
-import { createRequire } from "node:module";
-
 import dotenv from "dotenv";
-
-const require = createRequire(import.meta.url);
-
-const express = require("express");
-const connectDB = require("./config/db.js");
-const authRoutes = require("./routes/authRoutes.js");
-const householdRoutes = require("./routes/householdRoutes.js");
-const choreRoutes = require("./routes/choreRoutes.js");
-const recurringChoreRoutes = require("./routes/recurringChoreRoutes.js");
-const {
+import express from "express";
+import connectDB from "./config/db.js";
+import authRoutes from "./routes/authRoutes.js";
+import householdRoutes from "./routes/householdRoutes.js";
+import choreRoutes from "./routes/choreRoutes.js";
+import recurringChoreRoutes from "./routes/recurringChoreRoutes.js";
+import {
     startSchedulerLoop,
     runSchedulerTick
-} = require("./services/recurringScheduler.service.cjs");
+} from "./services/recurringScheduler.service.cjs";
 
 dotenv.config();
 
@@ -33,7 +28,6 @@ app.use("/api/recurring-chores", recurringChoreRoutes);
 
 const startServer = async () => {
     await connectDB();
-
     await runSchedulerTick(new Date());
 
     const scheduler = startSchedulerLoop();
