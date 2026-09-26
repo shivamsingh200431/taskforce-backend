@@ -323,6 +323,32 @@ describeIntegration("Recurring chore API integration", async (t) => {
             expectedNextRunAt.toISOString()
         );
 
+        await RecurringChoreTemplate.updateOne(
+            { _id: template._id },
+            {
+                $set: {
+                    "schedulerMetadata.nextRunAt": null
+                }
+            }
+        );
+
+        const reactivated = await request(
+            `/api/recurring-chores/${template._id}`,
+            {
+                method: "PATCH",
+                headers: { Authorization: `Bearer ${adminToken}` },
+                body: JSON.stringify({
+                    activePeriod: {
+                        startsAt: activeStartsAt,
+                        endsAt: "2099-12-31T00:00:00.000Z"
+                    }
+                })
+            }
+        );
+
+        assert.equal(reactivated.response.status, 200);
+        assert.ok(reactivated.body.template.schedulerMetadata.nextRunAt);
+
         const generate = await request(
             `/api/recurring-chores/${template._id}/generate`,
             {
