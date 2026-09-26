@@ -1,5 +1,7 @@
-const Chore = require("../models/Chore");
 const { resolveAssignee } = require("./assignment.service.cjs");
+
+const getChoreModel = async (ChoreModel) =>
+    ChoreModel || (await import("../models/Chore.js")).default;
 
 const MAX_CATCH_UP_DAYS = 30;
 
@@ -77,11 +79,13 @@ const generateOccurrence = async (
     occurrenceDate,
     {
         generationType = "normal",
-        ChoreModel = Chore,
+        ChoreModel,
         resolveAssigneeFn = resolveAssignee,
         now = new Date()
     } = {}
 ) => {
+    ChoreModel = await getChoreModel(ChoreModel);
+
     const normalizedDate = normalizeOccurrenceDate(occurrenceDate);
 
     const assignment = await resolveAssigneeFn(
@@ -232,7 +236,9 @@ const processTemplate = async (
 
     for (const occurrenceDate of occurrenceDates) {
         const generationType =
-            occurrenceDate.toDateString() === now.toDateString()
+            occurrenceDate.getUTCFullYear() === now.getUTCFullYear() &&
+            occurrenceDate.getUTCMonth() === now.getUTCMonth() &&
+            occurrenceDate.getUTCDate() === now.getUTCDate()
                 ? "normal"
                 : "recovery";
 
@@ -242,10 +248,7 @@ const processTemplate = async (
             { generationType, now }
         );
 
-        if (
-            !result.created &&
-            !result.idempotent
-        ) {
+        if (!result.created && !result.idempotent) {
             throw new Error(
                 `Recurring occurrence was not generated: ${result.reason}`
             );
