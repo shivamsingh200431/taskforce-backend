@@ -1,6 +1,8 @@
 import RecurringChoreTemplate from "../models/RecurringChoreTemplate.js";
 import { isMember, isAdmin } from "../utils/householdPermissions.js";
-import { generateOccurrence } from "../services/recurringChore.service.cjs";
+import recurringChoreService from "../services/recurringChore.service.cjs";
+
+const { generateOccurrence } = recurringChoreService;
 
 const createRecurringChore = async (req, res) => {
     try {
