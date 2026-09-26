@@ -22,6 +22,8 @@ const ids = {
     householdId: new mongoose.Types.ObjectId()
 };
 
+const activeStartsAt = "2026-09-26T00:00:00.000Z";
+
 const unique = (prefix) => `${prefix}${crypto.randomUUID().slice(0, 8)}`;
 
 const makeToken = (userId) =>
@@ -120,8 +122,6 @@ describeIntegration("Recurring chore API integration", async (t) => {
 
         const adminToken = makeToken(admin._id);
         const memberToken = makeToken(member._id);
-
-        const activeStartsAt = "2026-09-26T00:00:00.000Z";
 
         const create = await request("/api/recurring-chores", {
             method: "POST",
