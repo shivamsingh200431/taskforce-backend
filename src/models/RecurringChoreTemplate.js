@@ -502,6 +502,10 @@ const schedulerMetadataSchema = new mongoose.Schema(
             type: Date,
             default: null,
         },
+        processingLeaseUntil: {
+            type: Date,
+            default: null,
+        },
     },
     {
         _id: false,
