@@ -207,7 +207,9 @@ const processTemplate = async (
     if (template.schedulerMetadata?.lastProcessedAt) {
         const last = new Date(template.schedulerMetadata.lastProcessedAt);
         if (last >= startDate) {
-            startDate = new Date(last.getTime() + 1);
+            startDate = new Date(last);
+            startDate.setUTCHours(0, 0, 0, 0);
+            startDate.setUTCDate(startDate.getUTCDate() + 1);
         }
     }
 
