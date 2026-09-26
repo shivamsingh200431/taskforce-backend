@@ -47,6 +47,21 @@ const request = async (path, options = {}) => {
     };
 };
 
+const nextDailyOccurrence = (activeStart, interval, now) => {
+    const candidate = new Date(activeStart.getTime());
+    candidate.setUTCHours(0, 0, 0, 0);
+
+    const nextEligible = new Date(now.getTime());
+    nextEligible.setUTCHours(0, 0, 0, 0);
+    nextEligible.setUTCDate(nextEligible.getUTCDate() + 1);
+
+    while (candidate < nextEligible) {
+        candidate.setUTCDate(candidate.getUTCDate() + interval);
+    }
+
+    return candidate;
+};
+
 describeIntegration("Recurring chore API integration", async (t) => {
     await t.test("starts the API against the configured test database", async () => {
         process.env.JWT_SECRET ||= "integration-test-secret";
@@ -106,6 +121,8 @@ describeIntegration("Recurring chore API integration", async (t) => {
         const adminToken = makeToken(admin._id);
         const memberToken = makeToken(member._id);
 
+        const activeStartsAt = "2026-09-26T00:00:00.000Z";
+
         const create = await request("/api/recurring-chores", {
             method: "POST",
             headers: { Authorization: `Bearer ${adminToken}` },
@@ -139,8 +156,11 @@ describeIntegration("Recurring chore API integration", async (t) => {
                     }
                 },
                 activePeriod: {
-                    startsAt: "2026-09-26T00:00:00.000Z",
+                    startsAt: activeStartsAt,
                     endsAt: null
+                },
+                schedulerMetadata: {
+                    nextRunAt: "2030-01-01T00:00:00.000Z"
                 }
             })
         });
@@ -148,6 +168,10 @@ describeIntegration("Recurring chore API integration", async (t) => {
         assert.equal(create.response.status, 201);
         assert.ok(create.body.template._id);
         assert.equal(create.body.template.householdId, ids.householdId.toString());
+        assert.equal(
+            create.body.template.schedulerMetadata.nextRunAt,
+            activeStartsAt
+        );
 
         const templateId = create.body.template._id;
 
@@ -246,9 +270,16 @@ describeIntegration("Recurring chore API integration", async (t) => {
         );
 
         assert.equal(scheduleUpdate.response.status, 200);
+
+        const expectedNextRunAt = nextDailyOccurrence(
+            new Date("2026-09-26T00:00:00.000Z"),
+            2,
+            new Date()
+        );
+
         assert.equal(
             scheduleUpdate.body.template.schedulerMetadata.nextRunAt,
-            "2026-09-28T00:00:00.000Z"
+            expectedNextRunAt.toISOString()
         );
 
         const generate = await request(
