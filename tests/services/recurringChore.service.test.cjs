@@ -50,6 +50,7 @@ test("generated occurrence snapshots template fields and resolved assignee", asy
     let created;
 
     const ChoreModel = {
+        findOne: async () => null,
         create: async (payload) => {
             created = payload;
             return { ...payload, _id: "chore-1" };
@@ -92,6 +93,7 @@ test("manual generation uses manual generation type", async () => {
         {
             generationType: "manual",
             ChoreModel: {
+                findOne: async () => null,
                 create: async (payload) => {
                     created = payload;
                     return payload;
@@ -116,6 +118,7 @@ test("assignment failure prevents an unassigned recurring chore", async () => {
         new Date("2026-09-26T00:00:00.000Z"),
         {
             ChoreModel: {
+                findOne: async () => null,
                 create: async () => {
                     createCalled = true;
                 }
@@ -138,6 +141,9 @@ test("duplicate occurrence is treated as idempotent success", async () => {
     const existing = { _id: "existing", title: "Wash dishes" };
 
     const ChoreModel = {
+        findOne: () => ({
+            lean: async () => null
+        }),
         create: async () => {
             const error = new Error("duplicate");
             error.code = 11000;
@@ -163,6 +169,46 @@ test("duplicate occurrence is treated as idempotent success", async () => {
     assert.equal(result.created, false);
     assert.equal(result.idempotent, true);
     assert.equal(result.chore, existing);
+});
+
+test("existing occurrence is idempotent before assignee resolution", async () => {
+    const existing = {
+        _id: "existing",
+        recurringTemplateId: template._id,
+        occurrenceDate: new Date("2026-09-26T00:00:00.000Z")
+    };
+    let resolverCalled = false;
+    let createCalled = false;
+
+    const ChoreModel = {
+        findOne: () => ({
+            lean: async () => existing
+        }),
+        create: async () => {
+            createCalled = true;
+        }
+    };
+
+    const result = await generateOccurrence(
+        template,
+        new Date("2026-09-26T00:00:00.000Z"),
+        {
+            ChoreModel,
+            resolveAssigneeFn: async () => {
+                resolverCalled = true;
+                return {
+                    ok: false,
+                    reason: "fixed_assignee_not_eligible"
+                };
+            }
+        }
+    );
+
+    assert.equal(result.created, false);
+    assert.equal(result.idempotent, true);
+    assert.equal(result.chore, existing);
+    assert.equal(resolverCalled, false);
+    assert.equal(createCalled, false);
 });
 
 test("processTemplate generates all due occurrences and returns scheduler updates", async () => {
