@@ -1,14 +1,9 @@
-const Chore = require("../models/Chore");
-const Membership = require("../models/Membership");
-
-const {
-    isMember,
-    isAdmin
-} = require("../utils/householdPermissions");
+import Chore from "../models/Chore.js";
+import Membership from "../models/Membership.js";
+import { isMember, isAdmin } from "../utils/householdPermissions.js";
 
 const createChore = async (req, res) => {
     try {
-
         const {
             title,
             description,
@@ -25,11 +20,7 @@ const createChore = async (req, res) => {
             });
         }
 
-        const member = await isMember(
-            req.user._id,
-            householdId
-        );
-
+        const member = await isMember(req.user._id, householdId);
         if (!member) {
             return res.status(403).json({
                 message: "You are not a member of this household"
@@ -41,7 +32,7 @@ const createChore = async (req, res) => {
             householdId
         });
 
-        let choreData = {
+        const choreData = {
             title,
             description,
             householdId,
@@ -51,45 +42,32 @@ const createChore = async (req, res) => {
         };
 
         if (membership.role === "admin") {
-
             if (!assignedTo) {
                 return res.status(400).json({
                     message: "assignedTo is required"
                 });
             }
 
-            const assignedUserIsMember =
-    await isMember(
-        assignedTo,
-        householdId
-    );
+            const assignedUserIsMember = await isMember(
+                assignedTo,
+                householdId
+            );
 
-if (!assignedUserIsMember) {
-    return res.status(400).json({
-        message:
-            "Assigned user must belong to this household"
-    });
-}
+            if (!assignedUserIsMember) {
+                return res.status(400).json({
+                    message: "Assigned user must belong to this household"
+                });
+            }
 
             choreData.assignedTo = assignedTo;
-
             choreData.approvalStatus = "approved";
-
             choreData.source = "admin-assigned";
-
-            choreData.approvedDifficulty =
-                suggestedDifficulty;
-
+            choreData.approvedDifficulty = suggestedDifficulty;
         } else {
-
             choreData.assignedTo = req.user._id;
-
             choreData.approvalStatus = "pending";
-
             choreData.source = "member-submitted";
-
-            choreData.suggestedDifficulty =
-                suggestedDifficulty;
+            choreData.suggestedDifficulty = suggestedDifficulty;
         }
 
         const chore = await Chore.create(choreData);
@@ -102,21 +80,14 @@ if (!assignedUserIsMember) {
                 approvalStatus: chore.approvalStatus
             }
         });
-
     } catch (error) {
-
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
-
+        res.status(500).json({ message: "Server error" });
     }
 };
 
 const getChores = async (req, res) => {
     try {
-
         const { householdId } = req.query;
 
         if (!householdId) {
@@ -125,11 +96,7 @@ const getChores = async (req, res) => {
             });
         }
 
-        const member = await isMember(
-            req.user._id,
-            householdId
-        );
-
+        const member = await isMember(req.user._id, householdId);
         if (!member) {
             return res.status(403).json({
                 message: "You are not a member of this household"
@@ -139,63 +106,36 @@ const getChores = async (req, res) => {
         const chores = await Chore.find({
             householdId
         })
-        .populate("assignedTo", "username")
-        .populate("createdBy", "username")
-        .sort({ createdAt: -1 });
+            .populate("assignedTo", "username")
+            .populate("createdBy", "username")
+            .sort({ createdAt: -1 });
 
-        const formattedChores = chores.map(
-            (chore) => ({
-                id: chore._id,
-                title: chore.title,
-                description: chore.description,
+        const formattedChores = chores.map((chore) => ({
+            id: chore._id,
+            title: chore.title,
+            description: chore.description,
+            assignedTo: chore.assignedTo?.username,
+            createdBy: chore.createdBy?.username,
+            choreType: chore.choreType,
+            completionStatus: chore.completionStatus,
+            approvalStatus: chore.approvalStatus,
+            source: chore.source,
+            feedback: chore.feedback,
+            suggestedDifficulty: chore.suggestedDifficulty,
+            approvedDifficulty: chore.approvedDifficulty,
+            dueDate: chore.dueDate
+        }));
 
-                assignedTo:
-                    chore.assignedTo?.username,
-
-                createdBy:
-                    chore.createdBy?.username,
-
-                choreType: chore.choreType,
-
-                completionStatus: chore.completionStatus,
-
-                approvalStatus:
-                    chore.approvalStatus,
-
-                source: chore.source,
-
-                feedback: chore.feedback,
-
-                suggestedDifficulty:
-                    chore.suggestedDifficulty,
-
-                approvedDifficulty:
-                    chore.approvedDifficulty,
-
-                dueDate: chore.dueDate
-            })
-        );
-
-        res.status(200).json({
-            chores: formattedChores
-        });
-
+        res.status(200).json({ chores: formattedChores });
     } catch (error) {
-
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
-
+        res.status(500).json({ message: "Server error" });
     }
 };
 
 const approveChore = async (req, res) => {
     try {
-
         const { id } = req.params;
-
         const {
             title,
             description,
@@ -205,19 +145,13 @@ const approveChore = async (req, res) => {
         } = req.body;
 
         const chore = await Chore.findById(id);
-
         if (!chore) {
             return res.status(404).json({
                 message: "Chore not found"
             });
         }
 
-        const admin = await isAdmin(
-            req.user._id,
-            chore.householdId
-        );
-
-        if (!admin) {
+        if (!await isAdmin(req.user._id, chore.householdId)) {
             return res.status(403).json({
                 message: "Admin access required"
             });
@@ -229,34 +163,15 @@ const approveChore = async (req, res) => {
             });
         }
 
-        if (title) {
-            chore.title = title;
-        }
-
-        if (description) {
-            chore.description = description;
-        }
-
-        if (approvedDifficulty !== undefined) {
-            chore.approvedDifficulty =
-                approvedDifficulty;
-        }
-
-        if (feedback !== undefined) {
-            chore.feedback = feedback;
-        }
+        if (title) chore.title = title;
+        if (description) chore.description = description;
+        if (approvedDifficulty !== undefined) chore.approvedDifficulty = approvedDifficulty;
+        if (feedback !== undefined) chore.feedback = feedback;
 
         chore.approvalStatus = "approved";
 
-        if (
-            chore.source === "member-submitted"
-        ) {
-
-            chore.completionStatus =
-                needsImprovement
-                    ? "pending"
-                    : "completed";
-
+        if (chore.source === "member-submitted") {
+            chore.completionStatus = needsImprovement ? "pending" : "completed";
         }
 
         await chore.save();
@@ -265,17 +180,11 @@ const approveChore = async (req, res) => {
             message: "Chore approved successfully",
             chore
         });
-
     } catch (error) {
-
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
-
+        res.status(500).json({ message: "Server error" });
     }
-}; 
+};
 
 const rejectChore = async (req, res) => {
     try {
@@ -283,19 +192,13 @@ const rejectChore = async (req, res) => {
         const { feedback } = req.body;
 
         const chore = await Chore.findById(id);
-
         if (!chore) {
             return res.status(404).json({
                 message: "Chore not found"
             });
         }
 
-        const admin = await isAdmin(
-            req.user._id,
-            chore.householdId
-        );
-
-        if (!admin) {
+        if (!await isAdmin(req.user._id, chore.householdId)) {
             return res.status(403).json({
                 message: "Admin access required"
             });
@@ -308,10 +211,7 @@ const rejectChore = async (req, res) => {
         }
 
         chore.approvalStatus = "rejected";
-
-        if (feedback) {
-            chore.feedback = feedback;
-        }
+        if (feedback) chore.feedback = feedback;
 
         await chore.save();
 
@@ -319,20 +219,15 @@ const rejectChore = async (req, res) => {
             message: "Chore rejected successfully",
             chore
         });
-
     } catch (error) {
         console.error(error);
-
-        res.status(500).json({
-            message: "Server error"
-        });
+        res.status(500).json({ message: "Server error" });
     }
 };
 
 const completeChore = async (req, res) => {
     try {
         const { id } = req.params;
-
         const chore = await Chore.findById(id);
 
         if (!chore) {
@@ -341,21 +236,18 @@ const completeChore = async (req, res) => {
             });
         }
 
-        // Only the assigned member can complete the chore
         if (!chore.assignedTo.equals(req.user._id)) {
             return res.status(403).json({
                 message: "Only the assigned member can complete this chore."
             });
         }
 
-        // Chore must already be approved
         if (chore.approvalStatus !== "approved") {
             return res.status(400).json({
                 message: "This chore is not approved."
             });
         }
 
-        // Prevent duplicate completion
         if (chore.completionStatus !== "pending") {
             return res.status(400).json({
                 message: "This chore has already been completed."
@@ -363,24 +255,19 @@ const completeChore = async (req, res) => {
         }
 
         chore.completionStatus = "completed";
-
         await chore.save();
 
         return res.status(200).json({
             message: "Chore marked as completed successfully.",
             chore
         });
-
     } catch (error) {
         console.error(error);
-
-        return res.status(500).json({
-            message: "Server error"
-        });
+        return res.status(500).json({ message: "Server error" });
     }
 };
 
-module.exports = {
+export {
     createChore,
     getChores,
     approveChore,
