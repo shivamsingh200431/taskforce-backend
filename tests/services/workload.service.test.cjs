@@ -48,6 +48,46 @@ test("current workload counts approved pending/overdue chores and difficulty poi
     });
 });
 
+test("rotation workload stats batch current and recent burden in two queries", async () => {
+    const queries = [];
+    const model = {
+        find(query) {
+            queries.push(query);
+            const chores = query.completionStatus
+                ? [
+                    { assignedTo: "user-a", approvedDifficulty: 3 },
+                    { assignedTo: "user-b", approvedDifficulty: 1 }
+                ]
+                : [
+                    { assignedTo: "user-a", approvedDifficulty: 4 },
+                    { assignedTo: "user-b", approvedDifficulty: 2 },
+                    { assignedTo: "user-a", approvedDifficulty: 1 }
+                ];
+
+            return {
+                lean: async () => chores
+            };
+        }
+    };
+
+    const result = await workload.getRotationWorkloadStats(
+        ["user-a", "user-b"],
+        "household",
+        new Date("2026-09-01"),
+        { ChoreModel: model }
+    );
+
+    assert.equal(queries.length, 2);
+    assert.equal(result.get("user-a").workloadCount, 1);
+    assert.equal(result.get("user-a").workloadPoints, 30);
+    assert.equal(result.get("user-a").recentAssignments, 2);
+    assert.equal(result.get("user-a").recentDifficulty, 50);
+    assert.equal(result.get("user-b").workloadCount, 1);
+    assert.equal(result.get("user-b").workloadPoints, 10);
+    assert.equal(result.get("user-b").recentAssignments, 1);
+    assert.equal(result.get("user-b").recentDifficulty, 20);
+});
+
 test("recent assignment burden counts only chores in the requested window", async () => {
     const model = makeFindModel([{}, {}, {}]);
 
