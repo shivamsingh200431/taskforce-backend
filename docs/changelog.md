@@ -20,5 +20,5 @@
 - Recurring templates now retain scheduler state independently from historical Chore instances.
 
 ### Verification
-- npm test: 32 tests passing.
-- npm run test:integration: requires a dedicated TEST_MONGO_URI and verifies real MongoDB persistence/index behavior.
+- Unit, model, service, API, and MongoDB integration coverage was added for the recurring chore engine.
+- The integration suite uses a dedicated TEST_MONGO_URI and verifies real persistence, unique-index, and scheduler state behavior.
