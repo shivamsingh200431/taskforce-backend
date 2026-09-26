@@ -217,6 +217,13 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         assert.ok(saved.schedulerMetadata.lastProcessedAt instanceof Date);
         assert.ok(saved.schedulerMetadata.nextRunAt instanceof Date);
         assert.ok(saved.schedulerMetadata.nextRunAt > new Date("2026-09-26T12:00:00.000Z"));
+
+        await Chore.deleteMany({
+            recurringTemplateId: template._id
+        });
+        await RecurringChoreTemplate.deleteOne({
+            _id: template._id
+        });
     });
 
     await t.test("scheduler persists null when the template has no future occurrence", async () => {
