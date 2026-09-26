@@ -8,6 +8,17 @@ const ids = {
     userId: new mongoose.Types.ObjectId(),
 };
 
+test("scheduler metadata allows no future next run", () => {
+    const template = new RecurringChoreTemplate({
+        title: "Take out trash",
+        householdId: ids.householdId,
+        createdBy: ids.userId,
+    });
+
+    assert.equal(template.schedulerMetadata.nextRunAt, null);
+    assert.equal(template.schedulerMetadata.processingLeaseUntil, null);
+});
+
 test("scheduler processing lease defaults to null", () => {
     const template = new RecurringChoreTemplate({
         title: "Take out trash",
