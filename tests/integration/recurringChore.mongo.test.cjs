@@ -85,7 +85,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         const template = makeTemplate();
 
         await Membership.create({
-            userId: ids.idempotencyUserId,
+            userId: ids.userId,
             householdId: ids.householdId,
             role: "member"
         });
@@ -152,7 +152,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
 
         await RecurringChoreTemplate.create(template);
         await Membership.create({
-            userId: ids.userId,
+            userId: ids.idempotencyUserId,
             householdId: ids.householdId,
             role: "member"
         });
@@ -169,13 +169,6 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             householdId: ids.householdId
         });
 
-        await Chore.deleteMany({
-            recurringTemplateId: template._id
-        });
-        await RecurringChoreTemplate.deleteOne({
-            _id: template._id
-        });
-
         const retry = await generateOccurrence(
             template,
             new Date("2026-09-27T00:00:00.000Z")
@@ -187,6 +180,13 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             retry.chore._id.toString(),
             first.chore._id.toString()
         );
+
+        await Chore.deleteMany({
+            recurringTemplateId: template._id
+        });
+        await RecurringChoreTemplate.deleteOne({
+            _id: template._id
+        });
     });
 
     await t.test("scheduler persists nextRunAt and clears its lease", async () => {
