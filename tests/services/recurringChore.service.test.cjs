@@ -4,7 +4,8 @@ const test = require("node:test");
 const {
     generateOccurrence,
     processTemplate,
-    normalizeOccurrenceDate
+    normalizeOccurrenceDate,
+    getNextOccurrence
 } = require("../../src/services/recurringChore.service.cjs");
 
 const template = {
@@ -262,4 +263,29 @@ test("processTemplate resumes from the next calendar day after the last processe
     );
 
     assert.equal(resumedStartDates[0], "2026-09-27");
+});
+
+
+test("getNextOccurrence respects a future active period", async () => {
+    const futureTemplate = {
+        ...template,
+        activePeriod: {
+            startsAt: new Date("2026-10-05T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const recurrenceUtils = {
+        getDailyOccurrences: ({ startDate }) => [
+            new Date("2026-10-05T00:00:00.000Z")
+        ]
+    };
+
+    const result = await getNextOccurrence(
+        futureTemplate,
+        new Date("2026-09-27T12:00:00.000Z"),
+        recurrenceUtils
+    );
+
+    assert.equal(result.toISOString(), "2026-10-05T00:00:00.000Z");
 });
