@@ -232,3 +232,34 @@ test("processTemplate bounds automatic catch-up to the configured window", async
     assert.equal(receivedStartDates[0], expectedStart.toISOString().slice(0, 10));
     assert.equal(result.occurrencesProcessed, 1);
 });
+
+
+test("processTemplate resumes from the next calendar day after the last processed occurrence", async () => {
+    const resumedStartDates = [];
+
+    const processedTemplate = {
+        ...template,
+        schedulerMetadata: {
+            ...template.schedulerMetadata,
+            lastProcessedAt: new Date("2026-09-26T00:00:00.000Z")
+        }
+    };
+
+    const recurrenceUtils = {
+        getDailyOccurrences: ({ startDate }) => {
+            resumedStartDates.push(startDate);
+            return [new Date("2026-09-27T00:00:00.000Z")];
+        }
+    };
+
+    await processTemplate(
+        processedTemplate,
+        new Date("2026-09-27T12:00:00.000Z"),
+        {
+            recurrenceUtils,
+            generateOccurrenceFn: async () => ({ created: true })
+        }
+    );
+
+    assert.equal(resumedStartDates[0], "2026-09-27");
+});
