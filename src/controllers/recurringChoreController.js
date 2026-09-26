@@ -1,16 +1,9 @@
-const getRecurringChoreTemplateModel = async () =>
-    (await import("../models/RecurringChoreTemplate.js")).default;
-const {
-    isMember,
-    isAdmin
-} = require("../utils/householdPermissions");
-const {
-    generateOccurrence
-} = require("../services/recurringChore.service.cjs");
+import RecurringChoreTemplate from "../models/RecurringChoreTemplate.js";
+import { isMember, isAdmin } from "../utils/householdPermissions.js";
+import { generateOccurrence } from "../services/recurringChore.service.cjs";
 
 const createRecurringChore = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const { householdId, ...body } = req.body;
 
         if (!householdId || !body.title) {
@@ -54,7 +47,6 @@ const createRecurringChore = async (req, res) => {
 
 const listRecurringChores = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const { householdId } = req.query;
 
         if (!householdId) {
@@ -82,7 +74,6 @@ const listRecurringChores = async (req, res) => {
 
 const getRecurringChore = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -106,7 +97,6 @@ const getRecurringChore = async (req, res) => {
 
 const updateRecurringChore = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -158,7 +148,6 @@ const updateRecurringChore = async (req, res) => {
 
 const deleteRecurringChore = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -186,7 +175,6 @@ const deleteRecurringChore = async (req, res) => {
 
 const generateRecurringChoreManually = async (req, res) => {
     try {
-        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -232,7 +220,7 @@ const generateRecurringChoreManually = async (req, res) => {
     }
 };
 
-module.exports = {
+export {
     createRecurringChore,
     listRecurringChores,
     getRecurringChore,
