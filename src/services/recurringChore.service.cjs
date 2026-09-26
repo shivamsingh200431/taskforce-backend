@@ -194,6 +194,26 @@ const generateOccurrence = async (
 
     const normalizedDate = normalizeOccurrenceDate(occurrenceDate);
 
+    const occurrenceIdentity = {
+        recurringTemplateId: template._id,
+        occurrenceDate: normalizedDate,
+        choreType: "recurring"
+    };
+
+    const existingQuery = ChoreModel.findOne(occurrenceIdentity);
+    const existing =
+        typeof existingQuery?.lean === "function"
+            ? await existingQuery.lean()
+            : await existingQuery;
+
+    if (existing) {
+        return {
+            created: false,
+            idempotent: true,
+            chore: existing
+        };
+    }
+
     const assignment = await resolveAssigneeFn(
         template,
         now
@@ -236,11 +256,11 @@ const generateOccurrence = async (
             throw error;
         }
 
-        const existing = await ChoreModel.findOne({
-            recurringTemplateId: template._id,
-            occurrenceDate: normalizedDate,
-            choreType: "recurring"
-        }).lean();
+        const existingQuery = ChoreModel.findOne(occurrenceIdentity);
+        const existing =
+            typeof existingQuery?.lean === "function"
+                ? await existingQuery.lean()
+                : await existingQuery;
 
         if (!existing) {
             throw error;
