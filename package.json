@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "nodemon src/server.js",
-    "test": "node --test"
+    "test": "node --test",
+    "test:integration": "node --test tests/integration"
   },
   "keywords": [],
   "author": "",
