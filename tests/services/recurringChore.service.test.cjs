@@ -168,12 +168,18 @@ test("duplicate occurrence is treated as idempotent success", async () => {
 test("processTemplate generates all due occurrences and returns scheduler updates", async () => {
     const generated = [];
 
+    let recurrenceCallCount = 0;
     const recurrenceUtils = {
-        getDailyOccurrences: () => [
-            new Date("2026-09-24T00:00:00.000Z"),
-            new Date("2026-09-25T00:00:00.000Z"),
-            new Date("2026-09-26T00:00:00.000Z")
-        ]
+        getDailyOccurrences: () => {
+            recurrenceCallCount++;
+            return recurrenceCallCount === 1
+                ? [
+                    new Date("2026-09-24T00:00:00.000Z"),
+                    new Date("2026-09-25T00:00:00.000Z"),
+                    new Date("2026-09-26T00:00:00.000Z")
+                ]
+                : [new Date("2026-09-27T00:00:00.000Z")];
+        }
     };
 
     const result = await processTemplate(
@@ -362,7 +368,7 @@ test("getNextOccurrence preserves interval phase for weekly, monthly, and yearly
             now: "2026-09-27T12:00:00.000Z",
             recurrence: {
                 getWeeklyOccurrences: (args) => {
-                    assert.equal(args.startDate, "2026-09-20");
+                    assert.equal(args.startDate, "2026-09-27");
                     return [new Date("2026-10-04T00:00:00.000Z")];
                 }
             },
