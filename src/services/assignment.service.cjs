@@ -80,40 +80,38 @@ const resolveRotationAssignee = async (
         getHistoryWindowDays(template.schedule?.frequency)
     );
 
-    const rankings = await Promise.all(
-        members.map(async (member) => {
-            const userId = member.userId;
+    let statsByUserId;
 
-            const [
-                currentWorkload,
-                recentAssignments,
-                recentDifficulty
-            ] = await Promise.all([
-                workload.getCurrentWorkload(
-                    userId,
-                    template.householdId
-                ),
-                workload.getRecentAssignmentBurden(
-                    userId,
-                    template.householdId,
-                    windowStart
-                ),
-                workload.getRecentDifficultyBurden(
-                    userId,
-                    template.householdId,
-                    windowStart
-                )
-            ]);
+    if (typeof workload.getRotationWorkloadStats === "function") {
+        statsByUserId = await workload.getRotationWorkloadStats(
+            members.map((member) => member.userId),
+            template.householdId,
+            windowStart
+        );
+    }
 
+    const rankings = members.map((member) => {
+        const userId = member.userId;
+        const stats = statsByUserId?.get(toComparableId(userId));
+
+        if (stats) {
             return {
                 userId,
-                workloadCount: currentWorkload.count,
-                workloadPoints: currentWorkload.difficultyPoints,
-                recentAssignments,
-                recentDifficulty
+                workloadCount: stats.workloadCount,
+                workloadPoints: stats.workloadPoints,
+                recentAssignments: stats.recentAssignments,
+                recentDifficulty: stats.recentDifficulty
             };
-        })
-    );
+        }
+
+        return {
+            userId,
+            workloadCount: 0,
+            workloadPoints: 0,
+            recentAssignments: 0,
+            recentDifficulty: 0
+        };
+    });
 
     rankings.sort((a, b) =>
         a.workloadCount - b.workloadCount ||
