@@ -160,7 +160,12 @@ const getNextOccurrence = async (
         yearly: 366 * 20
     }[template.schedule.frequency] || 366;
 
-    const startDate = new Date(now.getTime() + 1);
+    // Recurrence utilities operate on calendar dates, so "next" must
+    // begin on the day after today rather than at a time later today.
+    const startDate = new Date(now.getTime());
+    startDate.setUTCHours(0, 0, 0, 0);
+    startDate.setUTCDate(startDate.getUTCDate() + 1);
+
     const endDate = new Date(
         startDate.getTime() +
         horizonDays * 24 * 60 * 60 * 1000
