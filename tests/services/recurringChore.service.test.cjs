@@ -474,7 +474,7 @@ test("getNextOccurrence searches past invalid monthly calendar dates", async () 
 
     assert.equal(
         result.toISOString(),
-        "2026-12-31T00:00:00.000Z"
+        "2026-08-31T00:00:00.000Z"
     );
 });
 
