@@ -16,6 +16,7 @@ let Household;
 let Membership;
 let Chore;
 let RecurringChoreTemplate;
+let testUserIds = [];
 
 const ids = {
     householdId: new mongoose.Types.ObjectId()
@@ -99,6 +100,8 @@ describeIntegration("Recurring chore API integration", async (t) => {
                 role: "member"
             }
         ]);
+
+        testUserIds = [admin._id, member._id];
 
         const adminToken = makeToken(admin._id);
         const memberToken = makeToken(member._id);
@@ -284,13 +287,7 @@ describeIntegration("Recurring chore API integration", async (t) => {
             householdId: ids.householdId
         });
         await Membership?.deleteMany({ householdId: ids.householdId });
-        await User?.deleteMany({
-            _id: {
-                $in: await Membership?.find({
-                    householdId: ids.householdId
-                }).distinct("userId") || []
-            }
-        });
+        await User?.deleteMany({ _id: { $in: testUserIds } });
         await Household?.deleteMany({ _id: ids.householdId });
 
         await new Promise((resolve) => {
