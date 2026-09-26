@@ -11,6 +11,8 @@ const DIFFICULTY_POINTS = Object.freeze({
 
 const OUTSTANDING_STATUSES = ["pending", "overdue"];
 
+const toUserKey = (value) => value?.toString?.() ?? String(value);
+
 const difficultyPointsFor = (difficulty) => {
     return DIFFICULTY_POINTS[difficulty] || 0;
 };
@@ -43,6 +45,67 @@ const getCurrentWorkload = async (
         },
         { count: 0, difficultyPoints: 0 }
     );
+};
+
+const getRotationWorkloadStats = async (
+    userIds,
+    householdId,
+    windowStart,
+    { ChoreModel } = {}
+) => {
+    ChoreModel = await getChoreModel(ChoreModel);
+
+    const stats = new Map(
+        userIds.map((userId) => [
+            toUserKey(userId),
+            {
+                workloadCount: 0,
+                workloadPoints: 0,
+                recentAssignments: 0,
+                recentDifficulty: 0
+            }
+        ])
+    );
+
+    const currentChores = await ChoreModel.find({
+        assignedTo: { $in: userIds },
+        householdId,
+        approvalStatus: "approved",
+        completionStatus: { $in: OUTSTANDING_STATUSES }
+    }).lean();
+
+    for (const chore of currentChores) {
+        const entry = stats.get(toUserKey(chore.assignedTo));
+        if (!entry) {
+            continue;
+        }
+
+        entry.workloadCount += 1;
+        entry.workloadPoints += difficultyPointsFor(
+            getDifficulty(chore)
+        );
+    }
+
+    const recentChores = await ChoreModel.find({
+        assignedTo: { $in: userIds },
+        householdId,
+        approvalStatus: "approved",
+        createdAt: { $gte: windowStart }
+    }).lean();
+
+    for (const chore of recentChores) {
+        const entry = stats.get(toUserKey(chore.assignedTo));
+        if (!entry) {
+            continue;
+        }
+
+        entry.recentAssignments += 1;
+        entry.recentDifficulty += difficultyPointsFor(
+            getDifficulty(chore)
+        );
+    }
+
+    return stats;
 };
 
 const getRecentAssignmentBurden = async (
@@ -87,6 +150,7 @@ module.exports = {
     OUTSTANDING_STATUSES,
     difficultyPointsFor,
     getCurrentWorkload,
+    getRotationWorkloadStats,
     getRecentAssignmentBurden,
     getRecentDifficultyBurden
 };
