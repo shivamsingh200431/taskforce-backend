@@ -67,11 +67,11 @@ const completeClaim = async (
         "schedulerMetadata.processingLeaseUntil": null
     };
 
-    if (updates.nextRunAt) {
+    if (Object.prototype.hasOwnProperty.call(updates, "nextRunAt")) {
         set["schedulerMetadata.nextRunAt"] = updates.nextRunAt;
     }
 
-    if (updates.lastProcessedAt) {
+    if (Object.prototype.hasOwnProperty.call(updates, "lastProcessedAt")) {
         set["schedulerMetadata.lastProcessedAt"] =
             updates.lastProcessedAt;
     }
