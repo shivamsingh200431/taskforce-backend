@@ -231,10 +231,15 @@ const processTemplate = async (
         : null;
 
     for (const occurrenceDate of occurrenceDates) {
+        const generationType =
+            occurrenceDate.toDateString() === now.toDateString()
+                ? "normal"
+                : "recovery";
+
         const result = await generateOccurrenceFn(
             template,
             occurrenceDate,
-            { generationType: "recovery", now }
+            { generationType, now }
         );
 
         if (
