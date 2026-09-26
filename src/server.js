@@ -1,5 +1,6 @@
 import dotenv from "dotenv";
 import express from "express";
+import { pathToFileURL } from "node:url";
 import connectDB from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import householdRoutes from "./routes/householdRoutes.js";
@@ -42,11 +43,19 @@ const startServer = async () => {
 
     process.once("SIGINT", shutdown);
     process.once("SIGTERM", shutdown);
+
+    return server;
 };
 
-startServer().catch((error) => {
-    console.error("Server startup failed:", error);
-    process.exitCode = 1;
-});
+if (
+    process.argv[1] &&
+    pathToFileURL(process.argv[1]).href === import.meta.url
+) {
+    startServer().catch((error) => {
+        console.error("Server startup failed:", error);
+        process.exitCode = 1;
+    });
+}
 
+export { app, startServer };
 export default app;
