@@ -38,10 +38,10 @@
 - Recurring chore API surface
 
 ### Verification
-- Unit/service/model tests: 32/32 passing
-- MongoDB integration suite: added; run with TEST_MONGO_URI
-- API end-to-end verification: remaining
-- Final Sprint 5 release cleanup: remaining
+- Unit, service, model, API, and MongoDB integration coverage
+- Real persistence and unique-index verification via TEST_MONGO_URI
+- Scheduler lease, idempotency, catch-up, and terminal-state coverage
+- Sprint 5 implementation complete; release cleanup remains
 
 ---
 
