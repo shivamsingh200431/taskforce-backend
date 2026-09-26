@@ -234,7 +234,6 @@ test("processTemplate bounds automatic catch-up to the configured window", async
     assert.equal(result.occurrencesProcessed, 1);
 });
 
-
 test("processTemplate resumes from the next calendar day after the last processed occurrence", async () => {
     const resumedStartDates = [];
 
@@ -265,7 +264,6 @@ test("processTemplate resumes from the next calendar day after the last processe
     assert.equal(resumedStartDates[0], "2026-09-27");
 });
 
-
 test("getNextOccurrence respects a future active period", async () => {
     const futureTemplate = {
         ...template,
@@ -288,4 +286,68 @@ test("getNextOccurrence respects a future active period", async () => {
     );
 
     assert.equal(result.toISOString(), "2026-10-05T00:00:00.000Z");
+});
+
+test("getNextOccurrence preserves the interval phase without scanning old history", async () => {
+    const oldTemplate = {
+        ...template,
+        schedule: {
+            frequency: "daily",
+            interval: 3
+        },
+        activePeriod: {
+            startsAt: new Date("2020-01-01T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    let receivedArgs;
+
+    const recurrenceUtils = {
+        getDailyOccurrences: (args) => {
+            receivedArgs = args;
+            return [
+                new Date("2026-09-26T00:00:00.000Z"),
+                new Date("2026-09-29T00:00:00.000Z")
+            ];
+        }
+    };
+
+    const result = await getNextOccurrence(
+        oldTemplate,
+        new Date("2026-09-27T12:00:00.000Z"),
+        recurrenceUtils
+    );
+
+    assert.equal(receivedArgs.startDate, "2026-09-26");
+    assert.equal(receivedArgs.endDate, "2027-09-27");
+    assert.equal(result.toISOString(), "2026-09-29T00:00:00.000Z");
+});
+
+test("getNextOccurrence returns null after the active period ends", async () => {
+    const endedTemplate = {
+        ...template,
+        activePeriod: {
+            startsAt: new Date("2026-09-01T00:00:00.000Z"),
+            endsAt: new Date("2026-09-27T00:00:00.000Z")
+        }
+    };
+
+    let recurrenceCalled = false;
+
+    const recurrenceUtils = {
+        getDailyOccurrences: () => {
+            recurrenceCalled = true;
+            return [];
+        }
+    };
+
+    const result = await getNextOccurrence(
+        endedTemplate,
+        new Date("2026-09-27T12:00:00.000Z"),
+        recurrenceUtils
+    );
+
+    assert.equal(result, null);
+    assert.equal(recurrenceCalled, false);
 });
