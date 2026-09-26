@@ -30,13 +30,19 @@ const claimTemplate = async (
             _id: templateId,
             "schedulerMetadata.nextRunAt": { $lte: now },
             "activePeriod.startsAt": { $lte: now },
-            $or: [
-                { "activePeriod.endsAt": null },
-                { "activePeriod.endsAt": { $gt: now } }
-            ],
-            $or: [
-                { "schedulerMetadata.processingLeaseUntil": null },
-                { "schedulerMetadata.processingLeaseUntil": { $lte: now } }
+            $and: [
+                {
+                    $or: [
+                        { "activePeriod.endsAt": null },
+                        { "activePeriod.endsAt": { $gt: now } }
+                    ]
+                },
+                {
+                    $or: [
+                        { "schedulerMetadata.processingLeaseUntil": null },
+                        { "schedulerMetadata.processingLeaseUntil": { $lte: now } }
+                    ]
+                }
             ]
         },
         {
@@ -119,14 +125,7 @@ const runSchedulerTick = async (
 ) => {
     TemplateModel = await getTemplateModel(TemplateModel);
 
-    const dueTemplates = await TemplateModel.find({
-        "schedulerMetadata.nextRunAt": { $lte: now },
-        "activePeriod.startsAt": { $lte: now },
-        $or: [
-            { "activePeriod.endsAt": null },
-            { "activePeriod.endsAt": { $gt: now } }
-        ]
-    }).lean?.() || await TemplateModel.find({
+    const dueQuery = TemplateModel.find({
         "schedulerMetadata.nextRunAt": { $lte: now },
         "activePeriod.startsAt": { $lte: now },
         $or: [
@@ -134,6 +133,11 @@ const runSchedulerTick = async (
             { "activePeriod.endsAt": { $gt: now } }
         ]
     });
+
+    const dueTemplates =
+        typeof dueQuery.lean === "function"
+            ? await dueQuery.lean()
+            : await dueQuery;
 
     let processed = 0;
     let failed = 0;
