@@ -351,3 +351,75 @@ test("getNextOccurrence returns null after the active period ends", async () => 
     assert.equal(result, null);
     assert.equal(recurrenceCalled, false);
 });
+
+
+test("getNextOccurrence preserves interval phase for weekly, monthly, and yearly schedules", async () => {
+    const cases = [
+        {
+            frequency: "weekly",
+            interval: 2,
+            activeStart: "2026-01-07T00:00:00.000Z",
+            now: "2026-09-27T12:00:00.000Z",
+            recurrence: {
+                getWeeklyOccurrences: (args) => {
+                    assert.equal(args.startDate, "2026-09-23");
+                    return [new Date("2026-10-04T00:00:00.000Z")];
+                }
+            },
+            expected: "2026-10-04T00:00:00.000Z"
+        },
+        {
+            frequency: "monthly",
+            interval: 2,
+            activeStart: "2026-01-15T00:00:00.000Z",
+            now: "2026-09-10T12:00:00.000Z",
+            recurrence: {
+                getMonthlyOccurrences: (args) => {
+                    assert.equal(args.startDate, "2026-09-01");
+                    return [new Date("2026-09-15T00:00:00.000Z")];
+                }
+            },
+            expected: "2026-09-15T00:00:00.000Z"
+        },
+        {
+            frequency: "yearly",
+            interval: 2,
+            activeStart: "2020-05-10T00:00:00.000Z",
+            now: "2026-06-01T12:00:00.000Z",
+            recurrence: {
+                getYearlyOccurrences: (args) => {
+                    assert.equal(args.startDate, "2026-01-01");
+                    return [new Date("2026-05-10T00:00:00.000Z")];
+                }
+            },
+            expected: "2028-05-10T00:00:00.000Z"
+        }
+    ];
+
+    for (const testCase of cases) {
+        const frequencyTemplate = {
+            ...template,
+            schedule: {
+                ...template.schedule,
+                frequency: testCase.frequency,
+                interval: testCase.interval,
+                weekdays: testCase.frequency === "weekly" ? [0] : [],
+                monthlyRule: testCase.frequency === "monthly" ? "FIXED_DAY" : null,
+                dayOfMonth: testCase.frequency === "monthly" ? 15 : testCase.frequency === "yearly" ? 10 : null,
+                month: testCase.frequency === "yearly" ? 5 : null
+            },
+            activePeriod: {
+                startsAt: new Date(testCase.activeStart),
+                endsAt: null
+            }
+        };
+
+        const result = await getNextOccurrence(
+            frequencyTemplate,
+            new Date(testCase.now),
+            testCase.recurrence
+        );
+
+        assert.equal(result.toISOString(), testCase.expected);
+    }
+});
