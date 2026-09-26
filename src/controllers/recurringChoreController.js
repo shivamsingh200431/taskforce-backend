@@ -2,7 +2,7 @@ import RecurringChoreTemplate from "../models/RecurringChoreTemplate.js";
 import { isMember, isAdmin } from "../utils/householdPermissions.js";
 import recurringChoreService from "../services/recurringChore.service.cjs";
 
-const { generateOccurrence } = recurringChoreService;
+const { generateOccurrence, getNextOccurrence } = recurringChoreService;
 
 const createRecurringChore = async (req, res) => {
     try {
@@ -123,15 +123,25 @@ const updateRecurringChore = async (req, res) => {
             "activePeriod"
         ];
 
+        const scheduleChanged = req.body.schedule !== undefined;
+        const activePeriodStartChanged =
+            req.body.activePeriod?.startsAt !== undefined;
+
         for (const field of allowed) {
             if (req.body[field] !== undefined) {
                 template[field] = req.body[field];
             }
         }
 
-        if (req.body.activePeriod?.startsAt !== undefined) {
-            template.schedulerMetadata.nextRunAt =
-                req.body.activePeriod.startsAt;
+        if (scheduleChanged || activePeriodStartChanged) {
+            const nextRunAt = await getNextOccurrence(
+                template,
+                new Date()
+            );
+
+            if (nextRunAt) {
+                template.schedulerMetadata.nextRunAt = nextRunAt;
+            }
         }
 
         await template.save();
