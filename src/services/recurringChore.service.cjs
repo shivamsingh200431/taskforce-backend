@@ -270,7 +270,8 @@ const getNextOccurrence = async (
         frequency,
         startDate,
         interval,
-        schedule
+        schedule,
+        phaseStart = startDate
     ) => {
         if (frequency === "daily") {
             const endDate = new Date(startDate.getTime());
@@ -294,34 +295,22 @@ const getNextOccurrence = async (
                 schedule?.monthlyRule === "fixedDay" &&
                 schedule?.dayOfMonth === 29
             ) {
-                let probeMonth = new Date(endDate.getTime());
-                let hasNonFebruaryMonth = false;
-                let hasValidDate = false;
+                let probeMonth = getMonthStart(phaseStart);
+                let onlyFebruaryMonths = true;
 
                 for (let index = 0; index < cycleCount; index += 1) {
-                    const month = probeMonth.getUTCMonth();
-                    const lastDay = new Date(
-                        Date.UTC(
-                            probeMonth.getUTCFullYear(),
-                            month + 1,
-                            0
-                        )
-                    ).getUTCDate();
-
-                    if (month !== 1) {
-                        hasNonFebruaryMonth = true;
+                    if (probeMonth.getUTCMonth() !== 1) {
+                        onlyFebruaryMonths = false;
+                        break;
                     }
 
-                    if (29 <= lastDay) {
-                        hasValidDate = true;
-                    }
-
+                    probeMonth = new Date(probeMonth.getTime());
                     probeMonth.setUTCMonth(
                         probeMonth.getUTCMonth() + interval
                     );
                 }
 
-                if (!hasValidDate && !hasNonFebruaryMonth) {
+                if (onlyFebruaryMonths) {
                     const yearlyInterval = interval / 12;
                     const leapCycleYears =
                         400 / greatestCommonDivisor(yearlyInterval, 400);
@@ -400,7 +389,8 @@ const getNextOccurrence = async (
         template.schedule.frequency,
         horizonStart,
         template.schedule.interval,
-        template.schedule
+        template.schedule,
+        recurrenceStart
     );
 
     if (template.activePeriod.endsAt) {
