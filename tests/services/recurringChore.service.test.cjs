@@ -197,3 +197,38 @@ test("processTemplate generates all due occurrences and returns scheduler update
     assert.equal(result.lastProcessedAt.toISOString(), "2026-09-26T00:00:00.000Z");
     assert.ok(result.nextRunAt instanceof Date);
 });
+
+test("processTemplate bounds automatic catch-up to the configured window", async () => {
+    let receivedStartDate;
+
+    const oldTemplate = {
+        ...template,
+        activePeriod: {
+            startsAt: new Date("2026-01-01T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const now = new Date("2026-09-26T12:00:00.000Z");
+    const expectedStart = new Date("2026-08-27T12:00:00.000Z");
+
+    const recurrenceUtils = {
+        getDailyOccurrences: ({ startDate }) => {
+            receivedStartDate = startDate;
+            return [new Date("2026-09-26T00:00:00.000Z")];
+        }
+    };
+
+    const result = await processTemplate(
+        oldTemplate,
+        now,
+        {
+            recurrenceUtils,
+            catchUpDays: 30,
+            generateOccurrenceFn: async () => ({ created: true })
+        }
+    );
+
+    assert.equal(receivedStartDate.getTime(), expectedStart.getTime());
+    assert.equal(result.occurrencesProcessed, 1);
+});
