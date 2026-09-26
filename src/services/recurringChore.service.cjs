@@ -47,8 +47,8 @@ const getOccurrenceDates = async (
     );
 
     const args = {
-        startDate,
-        endDate,
+        startDate: startDate.toISOString().slice(0, 10),
+        endDate: endDate.toISOString().slice(0, 10),
         interval: template.schedule.interval
     };
 
