@@ -1,4 +1,5 @@
-const Chore = require("../models/Chore");
+const getChoreModel = async (ChoreModel) =>
+    ChoreModel || (await import("../models/Chore.js")).default;
 
 const DIFFICULTY_POINTS = Object.freeze({
     1: 10,
@@ -21,8 +22,10 @@ const getDifficulty = (chore) => {
 const getCurrentWorkload = async (
     userId,
     householdId,
-    { ChoreModel = Chore } = {}
+    { ChoreModel } = {}
 ) => {
+    ChoreModel = await getChoreModel(ChoreModel);
+
     const chores = await ChoreModel.find({
         assignedTo: userId,
         householdId,
@@ -46,23 +49,25 @@ const getRecentAssignmentBurden = async (
     userId,
     householdId,
     windowStart,
-    { ChoreModel = Chore } = {}
+    { ChoreModel } = {}
 ) => {
-    const count = await ChoreModel.countDocuments({
+    ChoreModel = await getChoreModel(ChoreModel);
+
+    return ChoreModel.countDocuments({
         assignedTo: userId,
         householdId,
         createdAt: { $gte: windowStart }
     });
-
-    return count;
 };
 
 const getRecentDifficultyBurden = async (
     userId,
     householdId,
     windowStart,
-    { ChoreModel = Chore } = {}
+    { ChoreModel } = {}
 ) => {
+    ChoreModel = await getChoreModel(ChoreModel);
+
     const chores = await ChoreModel.find({
         assignedTo: userId,
         householdId,
