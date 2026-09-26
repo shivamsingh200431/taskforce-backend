@@ -12,6 +12,7 @@ let Chore;
 let Membership;
 let RecurringChoreTemplate;
 let processTemplate;
+let generateOccurrence;
 let runSchedulerTick;
 
 const ids = {
@@ -70,7 +71,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         RecurringChoreTemplate =
             (await import("../../src/models/RecurringChoreTemplate.js")).default;
 
-        ({ processTemplate } =
+        ({ processTemplate, generateOccurrence } =
             require("../../src/services/recurringChore.service.cjs"));
         ({ runSchedulerTick } =
             require("../../src/services/recurringScheduler.service.cjs"));
@@ -129,6 +130,44 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         }).catch((error) => error);
 
         assert.equal(duplicate.code, 11000);
+    });
+
+    await t.test("existing occurrence is idempotent even after fixed assignee leaves", async () => {
+        const template = makeTemplate({
+            _id: new mongoose.Types.ObjectId(),
+            title: "Idempotent retry " + crypto.randomUUID().slice(0, 8)
+        });
+
+        await RecurringChoreTemplate.create(template);
+        await Membership.create({
+            userId: ids.userId,
+            householdId: ids.householdId,
+            role: "member"
+        });
+
+        const first = await generateOccurrence(
+            template,
+            new Date("2026-09-27T00:00:00.000Z")
+        );
+
+        assert.equal(first.created, true);
+
+        await Membership.deleteOne({
+            userId: ids.userId,
+            householdId: ids.householdId
+        });
+
+        const retry = await generateOccurrence(
+            template,
+            new Date("2026-09-27T00:00:00.000Z")
+        );
+
+        assert.equal(retry.created, false);
+        assert.equal(retry.idempotent, true);
+        assert.equal(
+            retry.chore._id.toString(),
+            first.chore._id.toString()
+        );
     });
 
     await t.test("scheduler persists nextRunAt and clears its lease", async () => {
