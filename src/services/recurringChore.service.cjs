@@ -164,31 +164,33 @@ const getNextOccurrence = async (
         yearly: 366 * 20
     }[template.schedule.frequency] || 366;
 
-    // Recurrence utilities operate on calendar dates, so "next" must
-    // begin on the day after today rather than at a time later today.
-    const startDate = new Date(now.getTime());
-    startDate.setUTCHours(0, 0, 0, 0);
-    startDate.setUTCDate(startDate.getUTCDate() + 1);
+    // Recurrence intervals are anchored to the template's active start.
+    // Generate from that anchor, then select the first occurrence strictly
+    // after the current calendar day.
+    const nextEligibleDate = new Date(now.getTime());
+    nextEligibleDate.setUTCHours(0, 0, 0, 0);
+    nextEligibleDate.setUTCDate(nextEligibleDate.getUTCDate() + 1);
 
     const activeStart = new Date(template.activePeriod.startsAt);
     activeStart.setUTCHours(0, 0, 0, 0);
-    if (activeStart > startDate) {
-        startDate.setTime(activeStart.getTime());
-    }
+
+    const recurrenceStart = activeStart > nextEligibleDate
+        ? activeStart
+        : activeStart;
 
     const endDate = new Date(
-        startDate.getTime() +
+        recurrenceStart.getTime() +
         horizonDays * 24 * 60 * 60 * 1000
     );
 
     const dates = await getOccurrenceDates(
         template,
-        startDate,
+        recurrenceStart,
         endDate,
         recurrenceUtils
     );
 
-    return dates[0] || null;
+    return dates.find((date) => date >= nextEligibleDate) || null;
 };
 
 const processTemplate = async (
