@@ -199,7 +199,7 @@ test("processTemplate generates all due occurrences and returns scheduler update
 });
 
 test("processTemplate bounds automatic catch-up to the configured window", async () => {
-    let receivedStartDate;
+    const receivedStartDates = [];
 
     const oldTemplate = {
         ...template,
@@ -214,7 +214,7 @@ test("processTemplate bounds automatic catch-up to the configured window", async
 
     const recurrenceUtils = {
         getDailyOccurrences: ({ startDate }) => {
-            receivedStartDate = startDate;
+            receivedStartDates.push(startDate);
             return [new Date("2026-09-26T00:00:00.000Z")];
         }
     };
@@ -229,6 +229,6 @@ test("processTemplate bounds automatic catch-up to the configured window", async
         }
     );
 
-    assert.equal(receivedStartDate.getTime(), expectedStart.getTime());
+    assert.equal(receivedStartDates[0].getTime(), expectedStart.getTime());
     assert.equal(result.occurrencesProcessed, 1);
 });
