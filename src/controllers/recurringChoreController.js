@@ -25,9 +25,7 @@ const createRecurringChore = async (req, res) => {
             householdId,
             createdBy: req.user._id,
             schedulerMetadata: {
-                ...(body.schedulerMetadata || {}),
                 nextRunAt:
-                    body.schedulerMetadata?.nextRunAt ||
                     body.activePeriod?.startsAt ||
                     new Date(),
                 lastProcessedAt: null,
@@ -139,9 +137,7 @@ const updateRecurringChore = async (req, res) => {
                 new Date()
             );
 
-            if (nextRunAt) {
-                template.schedulerMetadata.nextRunAt = nextRunAt;
-            }
+            template.schedulerMetadata.nextRunAt = nextRunAt;
         }
 
         await template.save();
