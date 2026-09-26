@@ -1,5 +1,11 @@
 const mongoose = require("mongoose");
 
+const RECURRING_GENERATION_TYPES = [
+    "normal",
+    "recovery",
+    "manual"
+];
+
 const choreSchema = new mongoose.Schema(
     {
         title: {
@@ -38,6 +44,29 @@ const choreSchema = new mongoose.Schema(
             type: String,
             enum: ["recurring", "one-time"],
             required: true
+        },
+
+        recurringTemplateId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "RecurringChoreTemplate",
+            required: function () {
+                return this.choreType === "recurring";
+            }
+        },
+
+        occurrenceDate: {
+            type: Date,
+            required: function () {
+                return this.choreType === "recurring";
+            }
+        },
+
+        generationType: {
+            type: String,
+            enum: RECURRING_GENERATION_TYPES,
+            required: function () {
+                return this.choreType === "recurring";
+            }
         },
 
         completionStatus: {
@@ -85,6 +114,19 @@ const choreSchema = new mongoose.Schema(
 
     {
         timestamps: true
+    }
+);
+
+choreSchema.index(
+    {
+        recurringTemplateId: 1,
+        occurrenceDate: 1
+    },
+    {
+        unique: true,
+        partialFilterExpression: {
+            choreType: "recurring"
+        }
     }
 );
 
