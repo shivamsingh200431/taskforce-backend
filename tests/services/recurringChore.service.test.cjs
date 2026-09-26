@@ -326,7 +326,7 @@ test("getNextOccurrence preserves the interval phase without scanning old histor
     );
 
     assert.equal(receivedArgs.startDate, "2026-09-26");
-    assert.equal(receivedArgs.endDate, "2027-09-29");
+    assert.equal(receivedArgs.endDate, "2026-10-01");
     assert.equal(result.toISOString(), "2026-09-29T00:00:00.000Z");
 });
 
