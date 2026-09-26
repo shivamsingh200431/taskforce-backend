@@ -492,7 +492,7 @@ const schedulerMetadataSchema = new mongoose.Schema(
     {
         nextRunAt: {
             type: Date,
-            required: true,
+            default: null,
         },
         lastProcessedAt: {
             type: Date,
