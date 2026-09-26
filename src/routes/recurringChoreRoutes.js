@@ -1,14 +1,13 @@
-const express = require("express");
-
-const authMiddleware = require("../middleware/authMiddleware");
-const {
+import express from "express";
+import authMiddleware from "../middleware/authMiddleware.js";
+import {
     createRecurringChore,
     listRecurringChores,
     getRecurringChore,
     updateRecurringChore,
     deleteRecurringChore,
     generateRecurringChoreManually
-} = require("../controllers/recurringChoreController");
+} from "../controllers/recurringChoreController.js";
 
 const router = express.Router();
 
@@ -21,4 +20,4 @@ router.patch("/:id", updateRecurringChore);
 router.delete("/:id", deleteRecurringChore);
 router.post("/:id/generate", generateRecurringChoreManually);
 
-module.exports = router;
+export default router;
