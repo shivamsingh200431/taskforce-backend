@@ -362,7 +362,7 @@ test("getNextOccurrence preserves interval phase for weekly, monthly, and yearly
             now: "2026-09-27T12:00:00.000Z",
             recurrence: {
                 getWeeklyOccurrences: (args) => {
-                    assert.equal(args.startDate, "2026-09-23");
+                    assert.equal(args.startDate, "2026-09-20");
                     return [new Date("2026-10-04T00:00:00.000Z")];
                 }
             },
@@ -389,7 +389,7 @@ test("getNextOccurrence preserves interval phase for weekly, monthly, and yearly
             recurrence: {
                 getYearlyOccurrences: (args) => {
                     assert.equal(args.startDate, "2026-01-01");
-                    return [new Date("2026-05-10T00:00:00.000Z")];
+                    return [new Date("2026-05-10T00:00:00.000Z"), new Date("2028-05-10T00:00:00.000Z")];
                 }
             },
             expected: "2028-05-10T00:00:00.000Z"
