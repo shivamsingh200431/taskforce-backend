@@ -180,8 +180,11 @@ test("processTemplate generates all due occurrences and returns scheduler update
         new Date("2026-09-26T12:00:00.000Z"),
         {
             recurrenceUtils,
-            generateOccurrenceFn: async (_template, date) => {
-                generated.push(date);
+            generateOccurrenceFn: async (_template, date, options) => {
+                generated.push({
+                    date,
+                    generationType: options.generationType
+                });
                 return { created: true };
             }
         }
