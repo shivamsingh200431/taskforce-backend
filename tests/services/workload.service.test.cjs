@@ -4,12 +4,15 @@ const test = require("node:test");
 const workload = require("../../src/services/workload.service.cjs");
 
 const makeFindModel = (chores) => ({
-    find() {
+    lastQuery: null,
+    find(query) {
+        this.lastQuery = query;
         return {
             lean: async () => chores
         };
     },
-    countDocuments() {
+    countDocuments(query) {
+        this.lastQuery = query;
         return Promise.resolve(chores.length);
     }
 });
@@ -56,6 +59,7 @@ test("recent assignment burden counts only chores in the requested window", asyn
     );
 
     assert.equal(result, 3);
+    assert.equal(model.lastQuery.approvalStatus, "approved");
 });
 
 test("recent difficulty burden sums the same difficulty-point mapping", async () => {
@@ -73,4 +77,5 @@ test("recent difficulty burden sums the same difficulty-point mapping", async ()
     );
 
     assert.equal(result, 70);
+    assert.equal(model.lastQuery.approvalStatus, "approved");
 });
