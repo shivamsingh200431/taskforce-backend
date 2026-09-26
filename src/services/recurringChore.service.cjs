@@ -74,6 +74,91 @@ const getOccurrenceDates = async (
         .sort((a, b) => a - b);
 };
 
+const getUtcDayDifference = (from, to) =>
+    Math.floor((to.getTime() - from.getTime()) / (24 * 60 * 60 * 1000));
+
+const getWeekStart = (date) => {
+    const result = new Date(date.getTime());
+    result.setUTCHours(0, 0, 0, 0);
+    result.setUTCDate(result.getUTCDate() - result.getUTCDay());
+    return result;
+};
+
+const getMonthStart = (date) => {
+    const result = new Date(date.getTime());
+    result.setUTCHours(0, 0, 0, 0);
+    result.setUTCDate(1);
+    return result;
+};
+
+const getYearStart = (date) => {
+    const result = new Date(date.getTime());
+    result.setUTCHours(0, 0, 0, 0);
+    result.setUTCMonth(0, 1);
+    return result;
+};
+
+// Return a bounded recurrence-search anchor that preserves the template's
+// interval phase while avoiding generation of every historical occurrence.
+const getRecurrenceSearchStart = (
+    frequency,
+    activeStart,
+    nextEligibleDate,
+    interval
+) => {
+    if (activeStart >= nextEligibleDate) {
+        return activeStart;
+    }
+
+    if (frequency === "daily") {
+        const elapsedDays = getUtcDayDifference(
+            activeStart,
+            nextEligibleDate
+        );
+        const alignedDays = Math.floor(elapsedDays / interval) * interval;
+        const candidate = new Date(activeStart.getTime());
+        candidate.setUTCDate(candidate.getUTCDate() + alignedDays);
+        return candidate;
+    }
+
+    if (frequency === "weekly") {
+        const activeWeek = getWeekStart(activeStart);
+        const eligibleWeek = getWeekStart(nextEligibleDate);
+        const elapsedWeeks = Math.floor(
+            getUtcDayDifference(activeWeek, eligibleWeek) / 7
+        );
+        const alignedWeeks = Math.floor(elapsedWeeks / interval) * interval;
+        const candidate = new Date(activeWeek.getTime());
+        candidate.setUTCDate(candidate.getUTCDate() + alignedWeeks * 7);
+        return candidate < activeStart ? activeStart : candidate;
+    }
+
+    if (frequency === "monthly") {
+        const activeMonth = getMonthStart(activeStart);
+        const eligibleMonth = getMonthStart(nextEligibleDate);
+        const elapsedMonths =
+            (eligibleMonth.getUTCFullYear() - activeMonth.getUTCFullYear()) * 12 +
+            (eligibleMonth.getUTCMonth() - activeMonth.getUTCMonth());
+        const alignedMonths = Math.floor(elapsedMonths / interval) * interval;
+        const candidate = new Date(activeMonth.getTime());
+        candidate.setUTCMonth(candidate.getUTCMonth() + alignedMonths);
+        return candidate < activeStart ? activeStart : candidate;
+    }
+
+    if (frequency === "yearly") {
+        const activeYear = getYearStart(activeStart);
+        const eligibleYear = getYearStart(nextEligibleDate);
+        const elapsedYears =
+            eligibleYear.getUTCFullYear() - activeYear.getUTCFullYear();
+        const alignedYears = Math.floor(elapsedYears / interval) * interval;
+        const candidate = new Date(activeYear.getTime());
+        candidate.setUTCFullYear(candidate.getUTCFullYear() + alignedYears);
+        return candidate < activeStart ? activeStart : candidate;
+    }
+
+    return activeStart;
+};
+
 const generateOccurrence = async (
     template,
     occurrenceDate,
@@ -164,9 +249,8 @@ const getNextOccurrence = async (
         yearly: 366 * 20
     }[template.schedule.frequency] || 366;
 
-    // Recurrence intervals are anchored to the template's active start.
-    // Generate from that anchor, then select the first occurrence strictly
-    // after the current calendar day.
+    // Scheduler runs by calendar day: the next occurrence is strictly after
+    // today's UTC calendar date.
     const nextEligibleDate = new Date(now.getTime());
     nextEligibleDate.setUTCHours(0, 0, 0, 0);
     nextEligibleDate.setUTCDate(nextEligibleDate.getUTCDate() + 1);
@@ -174,14 +258,46 @@ const getNextOccurrence = async (
     const activeStart = new Date(template.activePeriod.startsAt);
     activeStart.setUTCHours(0, 0, 0, 0);
 
-    const recurrenceStart = activeStart > nextEligibleDate
-        ? activeStart
-        : activeStart;
+    if (template.activePeriod.endsAt) {
+        const activeEnd = new Date(template.activePeriod.endsAt);
+        activeEnd.setUTCHours(0, 0, 0, 0);
+
+        if (activeEnd < nextEligibleDate) {
+            return null;
+        }
+    }
+
+    // Preserve the recurrence phase defined by activeStart, but only search
+    // from the nearest aligned calendar bucket. This avoids iterating over
+    // years of historical daily/monthly occurrences for old templates.
+    const recurrenceStart = getRecurrenceSearchStart(
+        template.schedule.frequency,
+        activeStart,
+        nextEligibleDate,
+        template.schedule.interval
+    );
+
+    const horizonStart = recurrenceStart > nextEligibleDate
+        ? recurrenceStart
+        : nextEligibleDate;
 
     const endDate = new Date(
-        recurrenceStart.getTime() +
+        horizonStart.getTime() +
         horizonDays * 24 * 60 * 60 * 1000
     );
+
+    if (template.activePeriod.endsAt) {
+        const activeEnd = new Date(template.activePeriod.endsAt);
+        activeEnd.setUTCHours(0, 0, 0, 0);
+
+        if (endDate > activeEnd) {
+            endDate.setTime(activeEnd.getTime());
+        }
+    }
+
+    if (recurrenceStart > endDate) {
+        return null;
+    }
 
     const dates = await getOccurrenceDates(
         template,
@@ -285,7 +401,7 @@ const processTemplate = async (
     return {
         occurrencesProcessed: occurrenceDates.length,
         lastProcessedAt,
-        nextRunAt: nextRunAt || template.schedulerMetadata?.nextRunAt || null
+        nextRunAt: nextRunAt || null
     };
 };
 
