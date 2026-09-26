@@ -330,6 +330,84 @@ test("getNextOccurrence preserves the interval phase without scanning old histor
     assert.equal(result.toISOString(), "2026-09-29T00:00:00.000Z");
 });
 
+test("getNextOccurrence supports intervals beyond the old fixed horizons", async () => {
+    const cases = [
+        {
+            frequency: "daily",
+            interval: 500,
+            activeStart: "2026-09-26T00:00:00.000Z",
+            now: "2026-09-27T12:00:00.000Z",
+            expected: "2028-02-08T00:00:00.000Z"
+        },
+        {
+            frequency: "weekly",
+            interval: 100,
+            activeStart: "2026-01-07T00:00:00.000Z",
+            now: "2026-09-27T12:00:00.000Z",
+            expected: "2028-01-09T00:00:00.000Z"
+        },
+        {
+            frequency: "monthly",
+            interval: 100,
+            activeStart: "2026-01-15T00:00:00.000Z",
+            now: "2026-09-10T12:00:00.000Z",
+            expected: "2034-05-15T00:00:00.000Z"
+        },
+        {
+            frequency: "yearly",
+            interval: 30,
+            activeStart: "2020-05-10T00:00:00.000Z",
+            now: "2026-06-01T12:00:00.000Z",
+            expected: "2050-05-10T00:00:00.000Z"
+        }
+    ];
+
+    for (const testCase of cases) {
+        let functionName;
+        const recurrenceUtils = {};
+
+        if (testCase.frequency === "daily") {
+            functionName = "getDailyOccurrences";
+        } else if (testCase.frequency === "weekly") {
+            functionName = "getWeeklyOccurrences";
+        } else if (testCase.frequency === "monthly") {
+            functionName = "getMonthlyOccurrences";
+        } else {
+            functionName = "getYearlyOccurrences";
+        }
+
+        recurrenceUtils[functionName] = ({ endDate }) => {
+            assert.ok(endDate >= testCase.expected.slice(0, 10));
+            return [new Date(testCase.expected)];
+        };
+
+        const frequencyTemplate = {
+            ...template,
+            schedule: {
+                ...template.schedule,
+                frequency: testCase.frequency,
+                interval: testCase.interval,
+                weekdays: testCase.frequency === "weekly" ? [1] : [],
+                monthlyRule: testCase.frequency === "monthly" ? "FIXED_DAY" : null,
+                dayOfMonth: testCase.frequency === "monthly" ? 15 : testCase.frequency === "yearly" ? 10 : null,
+                month: testCase.frequency === "yearly" ? 5 : null
+            },
+            activePeriod: {
+                startsAt: new Date(testCase.activeStart),
+                endsAt: null
+            }
+        };
+
+        const result = await getNextOccurrence(
+            frequencyTemplate,
+            new Date(testCase.now),
+            recurrenceUtils
+        );
+
+        assert.equal(result.toISOString(), testCase.expected);
+    }
+});
+
 test("getNextOccurrence returns null after the active period ends", async () => {
     const endedTemplate = {
         ...template,
