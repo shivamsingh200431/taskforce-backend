@@ -18,6 +18,7 @@ let runSchedulerTick;
 const ids = {
     householdId: new mongoose.Types.ObjectId(),
     userId: new mongoose.Types.ObjectId(),
+    idempotencyUserId: new mongoose.Types.ObjectId(),
     createdBy: new mongoose.Types.ObjectId()
 };
 
@@ -84,7 +85,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         const template = makeTemplate();
 
         await Membership.create({
-            userId: ids.userId,
+            userId: ids.idempotencyUserId,
             householdId: ids.householdId,
             role: "member"
         });
@@ -130,12 +131,23 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         }).catch((error) => error);
 
         assert.equal(duplicate.code, 11000);
+
+        await Chore.deleteMany({
+            recurringTemplateId: template._id
+        });
+        await RecurringChoreTemplate.deleteOne({
+            _id: template._id
+        });
     });
 
     await t.test("existing occurrence is idempotent even after fixed assignee leaves", async () => {
         const template = makeTemplate({
             _id: new mongoose.Types.ObjectId(),
-            title: "Idempotent retry " + crypto.randomUUID().slice(0, 8)
+            title: "Idempotent retry " + crypto.randomUUID().slice(0, 8),
+            assignment: {
+                strategy: "fixed",
+                assignedTo: ids.idempotencyUserId
+            }
         });
 
         await RecurringChoreTemplate.create(template);
@@ -153,8 +165,15 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         assert.equal(first.created, true);
 
         await Membership.deleteOne({
-            userId: ids.userId,
+            userId: ids.idempotencyUserId,
             householdId: ids.householdId
+        });
+
+        await Chore.deleteMany({
+            recurringTemplateId: template._id
+        });
+        await RecurringChoreTemplate.deleteOne({
+            _id: template._id
         });
 
         const retry = await generateOccurrence(
@@ -188,7 +207,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             { TemplateModel: RecurringChoreTemplate }
         );
 
-        assert.equal(result.processed, 2);
+        assert.equal(result.processed, 1);
         assert.equal(result.failed, 0);
 
         const saved = await RecurringChoreTemplate.findById(template._id).lean();
