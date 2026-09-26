@@ -234,7 +234,7 @@ const validateYearly = (schedule) => {
 // Schedule Validation Middleware
 // ==========================================
 
-scheduleSchema.pre("validate", function (next) {
+scheduleSchema.pre("validate", function () {
     switch (this.frequency) {
         case FREQUENCY.DAILY:
             validateDaily(this);
@@ -256,7 +256,6 @@ scheduleSchema.pre("validate", function (next) {
             break;
     }
 
-    next();
 });
 
 // ==========================================
@@ -436,11 +435,9 @@ const validateNotification = (notification) => {
 // Notification Validation Middleware
 // ==========================================
 
-notificationSchema.pre("validate", function (next) {
+notificationSchema.pre("validate", function () {
 
     validateNotification(this);
-
-    next();
 
 });
 
@@ -483,9 +480,8 @@ const validateActivePeriod = (activePeriod) => {
 // Active Period Validation Middleware
 // ==========================================
 
-activePeriodSchema.pre("validate", function (next) {
+activePeriodSchema.pre("validate", function () {
     validateActivePeriod(this);
-    next();
 });
 
 // ==========================================
