@@ -71,6 +71,61 @@ test("fixed assignment fails when configured member is no longer in household", 
     assert.equal(result.reason, "fixed_assignee_not_eligible");
 });
 
+test("rotation uses batched workload statistics when available", async () => {
+    const members = [
+        { userId: "user-a" },
+        { userId: "user-b" }
+    ];
+
+    let batchCalls = 0;
+
+    const result = await resolveRotationAssignee(
+        template(),
+        new Date("2026-09-26T00:00:00.000Z"),
+        {
+            MembershipModel: makeMembershipModel({ members }),
+            workloadService: {
+                getRotationWorkloadStats: async (userIds) => {
+                    batchCalls += 1;
+                    assert.deepEqual(userIds, ["user-a", "user-b"]);
+                    return new Map([
+                        [
+                            "user-a",
+                            {
+                                workloadCount: 1,
+                                workloadPoints: 10,
+                                recentAssignments: 1,
+                                recentDifficulty: 10
+                            }
+                        ],
+                        [
+                            "user-b",
+                            {
+                                workloadCount: 2,
+                                workloadPoints: 20,
+                                recentAssignments: 0,
+                                recentDifficulty: 0
+                            }
+                        ]
+                    ]);
+                },
+                getCurrentWorkload: async () => {
+                    throw new Error("per-member fallback should not run");
+                },
+                getRecentAssignmentBurden: async () => {
+                    throw new Error("per-member fallback should not run");
+                },
+                getRecentDifficultyBurden: async () => {
+                    throw new Error("per-member fallback should not run");
+                }
+            }
+        }
+    );
+
+    assert.equal(batchCalls, 1);
+    assert.equal(result.assignee, "user-a");
+});
+
 test("rotation chooses the lowest current workload", async () => {
     const members = [
         { userId: "user-b" },
