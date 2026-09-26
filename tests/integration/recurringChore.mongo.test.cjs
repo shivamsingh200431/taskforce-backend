@@ -149,7 +149,7 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             { TemplateModel: RecurringChoreTemplate }
         );
 
-        assert.equal(result.processed, 1);
+        assert.equal(result.processed, 2);
         assert.equal(result.failed, 0);
 
         const saved = await RecurringChoreTemplate.findById(template._id).lean();
