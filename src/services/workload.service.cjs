@@ -56,6 +56,7 @@ const getRecentAssignmentBurden = async (
     return ChoreModel.countDocuments({
         assignedTo: userId,
         householdId,
+        approvalStatus: "approved",
         createdAt: { $gte: windowStart }
     });
 };
@@ -71,6 +72,7 @@ const getRecentDifficultyBurden = async (
     const chores = await ChoreModel.find({
         assignedTo: userId,
         householdId,
+        approvalStatus: "approved",
         createdAt: { $gte: windowStart }
     }).lean();
 
