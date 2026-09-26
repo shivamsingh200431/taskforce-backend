@@ -31,10 +31,14 @@ const resolveFixedAssignee = async (
         };
     }
 
-    const membership = await MembershipModel.findOne({
+    const membershipQuery = MembershipModel.findOne({
         userId: assignedTo,
         householdId: template.householdId
-    }).lean();
+    });
+
+    const membership = typeof membershipQuery?.lean === "function"
+        ? await membershipQuery.lean()
+        : await membershipQuery;
 
     if (!membership) {
         return {
