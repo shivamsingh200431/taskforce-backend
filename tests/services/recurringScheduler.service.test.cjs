@@ -91,6 +91,38 @@ test("completion only clears a lease that still belongs to the claim", async () 
     );
 });
 
+test("completion persists an explicit null nextRunAt", async () => {
+    let received;
+
+    const model = {
+        updateOne: async (filter, update) => {
+            received = { filter, update };
+            return { matchedCount: 1 };
+        }
+    };
+
+    const leaseUntil = new Date("2026-09-26T10:05:00.000Z");
+
+    await completeClaim(
+        "template-1",
+        leaseUntil,
+        {
+            nextRunAt: null,
+            lastProcessedAt: new Date("2026-09-26T10:00:00.000Z")
+        },
+        { TemplateModel: model }
+    );
+
+    assert.equal(
+        received.update.$set["schedulerMetadata.nextRunAt"],
+        null
+    );
+    assert.equal(
+        received.update.$set["schedulerMetadata.processingLeaseUntil"],
+        null
+    );
+});
+
 test("scheduler isolates template failures", async () => {
     const claimed = ["template-1", "template-2"];
     const processed = [];
