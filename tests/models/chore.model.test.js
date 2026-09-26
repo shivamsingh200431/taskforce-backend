@@ -1,40 +1,7 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
-import vm from "node:vm";
+import test from "node:test";
 import mongoose from "mongoose";
-
-async function loadChoreModel() {
-    const source = await readFile(
-        new URL("../../src/models/Chore.js", import.meta.url),
-        "utf8"
-    );
-
-    let exportedModel;
-
-    const sandbox = {
-        require(request) {
-            if (request === "mongoose") {
-                return mongoose;
-            }
-
-            throw new Error(`Unexpected require: ${request}`);
-        },
-        module: {
-            exports: {},
-        },
-        exports: {},
-        console,
-    };
-
-    vm.runInNewContext(source, sandbox, {
-        filename: "src/models/Chore.js",
-    });
-
-    exportedModel = sandbox.module.exports;
-    return exportedModel;
-}
-
-const Chore = await loadChoreModel();
+import Chore from "../../src/models/Chore.js";
 
 const ids = {
     householdId: new mongoose.Types.ObjectId(),
