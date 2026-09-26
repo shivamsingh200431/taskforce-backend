@@ -40,7 +40,8 @@ const getOccurrenceDates = async (
     template,
     startDate,
     endDate,
-    recurrenceUtils
+    recurrenceUtils,
+    minimumDate = startDate
 ) => {
     const functionName = getRecurrenceFunctionName(
         template.schedule.frequency
@@ -68,9 +69,16 @@ const getOccurrenceDates = async (
 
     const dates = await recurrenceUtils[functionName](args);
 
+    const normalizedMinimumDate = new Date(minimumDate.getTime());
+    normalizedMinimumDate.setUTCHours(0, 0, 0, 0);
+
     return dates
         .map(normalizeOccurrenceDate)
-        .filter((date) => date <= endDate)
+        .filter(
+            (date) =>
+                date >= normalizedMinimumDate &&
+                date <= endDate
+        )
         .sort((a, b) => a - b);
 };
 
@@ -96,6 +104,19 @@ const getYearStart = (date) => {
     result.setUTCHours(0, 0, 0, 0);
     result.setUTCMonth(0, 1);
     return result;
+};
+
+const greatestCommonDivisor = (a, b) => {
+    let x = Math.abs(a);
+    let y = Math.abs(b);
+
+    while (y !== 0) {
+        const remainder = x % y;
+        x = y;
+        y = remainder;
+    }
+
+    return x;
 };
 
 // Return a bounded recurrence-search anchor that preserves the template's
@@ -262,16 +283,20 @@ const getNextOccurrence = async (
 
         if (frequency === "monthly") {
             const endDate = getMonthStart(startDate);
+            const cycleCount = 12 / greatestCommonDivisor(interval, 12);
+
             endDate.setUTCMonth(
-                endDate.getUTCMonth() + interval + 1,
+                endDate.getUTCMonth() + interval * cycleCount + 1,
                 0
             );
             return endDate;
         }
 
         if (frequency === "yearly") {
+            const cycleCount = 4 / greatestCommonDivisor(interval, 4);
+
             return new Date(Date.UTC(
-                startDate.getUTCFullYear() + interval + 1,
+                startDate.getUTCFullYear() + interval * cycleCount + 1,
                 0,
                 0
             ));
@@ -392,11 +417,22 @@ const processTemplate = async (
         };
     }
 
+    const recurrenceAnchor = new Date(activeStart.getTime());
+    recurrenceAnchor.setUTCHours(0, 0, 0, 0);
+
+    const recurrenceSearchStart = getRecurrenceSearchStart(
+        template.schedule.frequency,
+        recurrenceAnchor,
+        startDate,
+        template.schedule.interval
+    );
+
     const occurrenceDates = await getOccurrenceDates(
         template,
-        startDate,
+        recurrenceSearchStart,
         endDate,
-        recurrenceUtils
+        recurrenceUtils,
+        startDate
     );
 
     let lastProcessedAt = template.schedulerMetadata?.lastProcessedAt
