@@ -76,6 +76,28 @@ test("recurring Chore rejects unsupported generation types", async () => {
     await assert.rejects(chore.validate(), /generationType/);
 });
 
+test("rotation workload queries have supporting indexes", () => {
+    const indexes = Chore.schema.indexes();
+
+    assert.ok(
+        indexes.some(([fields]) =>
+            fields.householdId === 1 &&
+            fields.assignedTo === 1 &&
+            fields.approvalStatus === 1 &&
+            fields.completionStatus === 1
+        )
+    );
+
+    assert.ok(
+        indexes.some(([fields]) =>
+            fields.householdId === 1 &&
+            fields.assignedTo === 1 &&
+            fields.approvalStatus === 1 &&
+            fields.createdAt === -1
+        )
+    );
+});
+
 test("recurring occurrence identity has a unique compound index", () => {
     const indexes = Chore.schema.indexes();
 
