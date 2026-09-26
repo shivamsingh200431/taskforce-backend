@@ -229,6 +229,6 @@ test("processTemplate bounds automatic catch-up to the configured window", async
         }
     );
 
-    assert.equal(receivedStartDates[0].getTime(), expectedStart.getTime());
+    assert.equal(receivedStartDates[0], expectedStart.toISOString().slice(0, 10));
     assert.equal(result.occurrencesProcessed, 1);
 });
