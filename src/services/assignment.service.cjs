@@ -1,5 +1,7 @@
-const Membership = require("../models/Membership");
 const workloadService = require("./workload.service.cjs");
+
+const getMembershipModel = async (MembershipModel) =>
+    MembershipModel || (await import("../models/Membership.js")).default;
 
 const HISTORY_WINDOWS = Object.freeze({
     daily: 7,
@@ -16,8 +18,10 @@ const toComparableId = (value) => value?.toString?.() ?? String(value);
 
 const resolveFixedAssignee = async (
     template,
-    { MembershipModel = Membership } = {}
+    { MembershipModel } = {}
 ) => {
+    MembershipModel = await getMembershipModel(MembershipModel);
+
     const assignedTo = template.assignment?.assignedTo;
 
     if (!assignedTo) {
@@ -49,10 +53,12 @@ const resolveRotationAssignee = async (
     template,
     now = new Date(),
     {
-        MembershipModel = Membership,
+        MembershipModel,
         workloadService: workload = workloadService
     } = {}
 ) => {
+    MembershipModel = await getMembershipModel(MembershipModel);
+
     const members = await MembershipModel.find({
         householdId: template.householdId
     }).lean();
