@@ -5,10 +5,9 @@ import authRoutes from "./routes/authRoutes.js";
 import householdRoutes from "./routes/householdRoutes.js";
 import choreRoutes from "./routes/choreRoutes.js";
 import recurringChoreRoutes from "./routes/recurringChoreRoutes.js";
-import {
-    startSchedulerLoop,
-    runSchedulerTick
-} from "./services/recurringScheduler.service.cjs";
+import recurringSchedulerService from "./services/recurringScheduler.service.cjs";
+
+const { startSchedulerLoop, runSchedulerTick } = recurringSchedulerService;
 
 dotenv.config();
 
