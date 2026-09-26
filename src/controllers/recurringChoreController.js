@@ -181,6 +181,9 @@ const deleteRecurringChore = async (req, res) => {
     }
 };
 
+// Manual generation is an explicit admin override. It does not mutate
+// scheduler metadata or require the requested date to match the recurrence rule
+// or active period.
 const generateRecurringChoreManually = async (req, res) => {
     try {
         const template = await RecurringChoreTemplate.findById(req.params.id);
