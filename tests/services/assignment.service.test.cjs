@@ -8,7 +8,7 @@ const {
     getHistoryWindowDays
 } = require("../../src/services/assignment.service.cjs");
 
-const makeMembershipModel = ({ members = [], fixedMember = null }) => ({
+const makeMembershipModel = ({ members = [], fixedMember = null } = {}) => ({
     findOne() {
         return {
             lean: async () => fixedMember
