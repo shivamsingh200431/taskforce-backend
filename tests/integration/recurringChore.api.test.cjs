@@ -22,7 +22,7 @@ const ids = {
     householdId: new mongoose.Types.ObjectId()
 };
 
-const unique = (prefix) => `${prefix}-${crypto.randomUUID().slice(0, 8)}`;
+const unique = (prefix) => `${prefix}${crypto.randomUUID().slice(0, 8)}`;
 
 const makeToken = (userId) =>
     jwt.sign(
