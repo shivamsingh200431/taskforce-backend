@@ -1,4 +1,5 @@
-const RecurringChoreTemplate = require("../models/RecurringChoreTemplate");
+const getRecurringChoreTemplateModel = async () =>
+    (await import("../models/RecurringChoreTemplate.js")).default;
 const {
     isMember,
     isAdmin
@@ -9,6 +10,7 @@ const {
 
 const createRecurringChore = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const { householdId, ...body } = req.body;
 
         if (!householdId || !body.title) {
@@ -52,6 +54,7 @@ const createRecurringChore = async (req, res) => {
 
 const listRecurringChores = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const { householdId } = req.query;
 
         if (!householdId) {
@@ -79,6 +82,7 @@ const listRecurringChores = async (req, res) => {
 
 const getRecurringChore = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -102,6 +106,7 @@ const getRecurringChore = async (req, res) => {
 
 const updateRecurringChore = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -153,6 +158,7 @@ const updateRecurringChore = async (req, res) => {
 
 const deleteRecurringChore = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
@@ -180,6 +186,7 @@ const deleteRecurringChore = async (req, res) => {
 
 const generateRecurringChoreManually = async (req, res) => {
     try {
+        const RecurringChoreTemplate = await getRecurringChoreTemplateModel();
         const template = await RecurringChoreTemplate.findById(req.params.id);
 
         if (!template) {
