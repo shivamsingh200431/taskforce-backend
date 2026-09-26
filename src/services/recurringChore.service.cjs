@@ -242,12 +242,45 @@ const getNextOccurrence = async (
         recurrenceUtils = await import("../utils/recurrence.utils.js");
     }
 
-    const horizonDays = {
-        daily: 366,
-        weekly: 366,
-        monthly: 366 * 5,
-        yearly: 366 * 20
-    }[template.schedule.frequency] || 366;
+    // Search through one complete recurrence cycle after the aligned
+    // recurrence anchor. The horizon therefore scales with the configured
+    // interval instead of imposing a fixed window that can miss large intervals.
+    const getSearchEndDate = (frequency, startDate, interval) => {
+        if (frequency === "daily") {
+            const endDate = new Date(startDate.getTime());
+            endDate.setUTCDate(endDate.getUTCDate() + interval);
+            return endDate;
+        }
+
+        if (frequency === "weekly") {
+            const endDate = getWeekStart(startDate);
+            endDate.setUTCDate(
+                endDate.getUTCDate() + interval * 7 + 6
+            );
+            return endDate;
+        }
+
+        if (frequency === "monthly") {
+            const endDate = getMonthStart(startDate);
+            endDate.setUTCMonth(
+                endDate.getUTCMonth() + interval + 1,
+                0
+            );
+            return endDate;
+        }
+
+        if (frequency === "yearly") {
+            return new Date(Date.UTC(
+                startDate.getUTCFullYear() + interval + 1,
+                0,
+                0
+            ));
+        }
+
+        throw new Error(
+            `Unsupported recurrence frequency: ${frequency}`
+        );
+    };
 
     // Scheduler runs by calendar day: the next occurrence is strictly after
     // today's UTC calendar date.
@@ -281,9 +314,10 @@ const getNextOccurrence = async (
         ? recurrenceStart
         : nextEligibleDate;
 
-    const endDate = new Date(
-        horizonStart.getTime() +
-        horizonDays * 24 * 60 * 60 * 1000
+    const endDate = getSearchEndDate(
+        template.schedule.frequency,
+        horizonStart,
+        template.schedule.interval
     );
 
     if (template.activePeriod.endsAt) {
