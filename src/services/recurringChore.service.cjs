@@ -150,9 +150,13 @@ const generateOccurrence = async (
 
 const getNextOccurrence = async (
     template,
-    now,
+    now = new Date(),
     recurrenceUtils
 ) => {
+    if (!recurrenceUtils) {
+        recurrenceUtils = await import("../utils/recurrence.utils.js");
+    }
+
     const horizonDays = {
         daily: 366,
         weekly: 366,
@@ -165,6 +169,12 @@ const getNextOccurrence = async (
     const startDate = new Date(now.getTime());
     startDate.setUTCHours(0, 0, 0, 0);
     startDate.setUTCDate(startDate.getUTCDate() + 1);
+
+    const activeStart = new Date(template.activePeriod.startsAt);
+    activeStart.setUTCHours(0, 0, 0, 0);
+    if (activeStart > startDate) {
+        startDate.setTime(activeStart.getTime());
+    }
 
     const endDate = new Date(
         startDate.getTime() +
