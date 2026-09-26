@@ -281,5 +281,6 @@ module.exports = {
     MAX_CATCH_UP_DAYS,
     normalizeOccurrenceDate,
     generateOccurrence,
-    processTemplate
+    processTemplate,
+    getNextOccurrence
 };
