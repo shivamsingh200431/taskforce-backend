@@ -161,7 +161,7 @@ const runSchedulerTick = async (
             );
 
             const leaseUntil =
-                claimed.schedulerMetadata.processingLeaseUntil;
+                claimed.schedulerMetadata?.processingLeaseUntil;
 
             const completion = await completeClaim(
                 claimed._id,
