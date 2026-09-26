@@ -270,6 +270,48 @@ test("processTemplate resumes from the next calendar day after the last processe
     assert.equal(resumedStartDates[0], "2026-09-27");
 });
 
+test("processTemplate preserves recurrence phase after the last processed occurrence", async () => {
+    const generated = [];
+
+    const intervalTemplate = {
+        ...template,
+        schedule: {
+            ...template.schedule,
+            frequency: "daily",
+            interval: 2
+        },
+        activePeriod: {
+            startsAt: new Date("2026-09-24T00:00:00.000Z"),
+            endsAt: null
+        },
+        schedulerMetadata: {
+            ...template.schedulerMetadata,
+            nextRunAt: new Date("2026-09-26T00:00:00.000Z"),
+            lastProcessedAt: new Date("2026-09-24T00:00:00.000Z")
+        }
+    };
+
+    const result = await processTemplate(
+        intervalTemplate,
+        new Date("2026-09-27T12:00:00.000Z"),
+        {
+            generateOccurrenceFn: async (_template, date) => {
+                generated.push(date);
+                return { created: true };
+            }
+        }
+    );
+
+    assert.deepEqual(
+        generated.map((date) => date.toISOString()),
+        ["2026-09-26T00:00:00.000Z"]
+    );
+    assert.equal(
+        result.lastProcessedAt.toISOString(),
+        "2026-09-26T00:00:00.000Z"
+    );
+});
+
 test("getNextOccurrence respects a future active period", async () => {
     const futureTemplate = {
         ...template,
@@ -406,6 +448,62 @@ test("getNextOccurrence supports intervals beyond the old fixed horizons", async
 
         assert.equal(result.toISOString(), testCase.expected);
     }
+});
+
+test("getNextOccurrence searches past invalid monthly calendar dates", async () => {
+    const monthlyTemplate = {
+        ...template,
+        schedule: {
+            frequency: "monthly",
+            interval: 2,
+            weekdays: [],
+            dayOfMonth: 31,
+            month: null,
+            monthlyRule: "fixedDay"
+        },
+        activePeriod: {
+            startsAt: new Date("2026-02-01T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const result = await getNextOccurrence(
+        monthlyTemplate,
+        new Date("2026-02-02T12:00:00.000Z")
+    );
+
+    assert.equal(
+        result.toISOString(),
+        "2026-12-31T00:00:00.000Z"
+    );
+});
+
+test("getNextOccurrence searches past invalid yearly calendar dates", async () => {
+    const yearlyTemplate = {
+        ...template,
+        schedule: {
+            frequency: "yearly",
+            interval: 1,
+            weekdays: [],
+            dayOfMonth: 29,
+            month: 2,
+            monthlyRule: null
+        },
+        activePeriod: {
+            startsAt: new Date("2025-01-01T00:00:00.000Z"),
+            endsAt: null
+        }
+    };
+
+    const result = await getNextOccurrence(
+        yearlyTemplate,
+        new Date("2026-03-01T12:00:00.000Z")
+    );
+
+    assert.equal(
+        result.toISOString(),
+        "2028-02-29T00:00:00.000Z"
+    );
 });
 
 test("getNextOccurrence returns null after the active period ends", async () => {
