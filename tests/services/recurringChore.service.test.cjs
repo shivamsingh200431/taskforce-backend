@@ -191,6 +191,9 @@ test("processTemplate generates all due occurrences and returns scheduler update
     );
 
     assert.equal(generated.length, 3);
+    assert.equal(generated[0].generationType, "recovery");
+    assert.equal(generated[1].generationType, "recovery");
+    assert.equal(generated[2].generationType, "normal");
     assert.equal(result.lastProcessedAt.toISOString(), "2026-09-26T00:00:00.000Z");
     assert.ok(result.nextRunAt instanceof Date);
 });
