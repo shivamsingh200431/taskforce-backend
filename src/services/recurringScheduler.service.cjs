@@ -1,4 +1,3 @@
-const RecurringChoreTemplate = require("../models/RecurringChoreTemplate.js");
 const {
     SCHEDULER_LEASE_MS,
     MAX_CATCH_UP_DAYS
@@ -7,14 +6,23 @@ const {
     processTemplate
 } = require("./recurringChore.service.cjs");
 
+const getTemplateModel = async (TemplateModel) => {
+    if (TemplateModel) {
+        return TemplateModel;
+    }
+
+    return (await import("../models/RecurringChoreTemplate.js")).default;
+};
+
 const claimTemplate = async (
     templateId,
     now = new Date(),
     {
-        TemplateModel = RecurringChoreTemplate,
+        TemplateModel,
         leaseMs = SCHEDULER_LEASE_MS
     } = {}
 ) => {
+    TemplateModel = await getTemplateModel(TemplateModel);
     const leaseUntil = new Date(now.getTime() + leaseMs);
 
     return TemplateModel.findOneAndUpdate(
@@ -46,8 +54,9 @@ const completeClaim = async (
     templateId,
     leaseUntil,
     updates,
-    { TemplateModel = RecurringChoreTemplate } = {}
+    { TemplateModel } = {}
 ) => {
+    TemplateModel = await getTemplateModel(TemplateModel);
     const set = {
         "schedulerMetadata.processingLeaseUntil": null
     };
@@ -104,10 +113,12 @@ const startSchedulerLoop = ({
 const runSchedulerTick = async (
     now = new Date(),
     {
-        TemplateModel = RecurringChoreTemplate,
+        TemplateModel,
         processTemplateFn = processTemplate
     } = {}
 ) => {
+    TemplateModel = await getTemplateModel(TemplateModel);
+
     const dueTemplates = await TemplateModel.find({
         "schedulerMetadata.nextRunAt": { $lte: now },
         "activePeriod.startsAt": { $lte: now },
