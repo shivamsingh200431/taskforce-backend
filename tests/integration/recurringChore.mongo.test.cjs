@@ -77,7 +77,9 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         ({ runSchedulerTick } =
             require("../../src/services/recurringScheduler.service.cjs"));
 
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGO_URI, {
+            dbName: "taskforce_recurring_mongo_integration"
+        });
         assert.equal(mongoose.connection.readyState, 1);
     });
 
