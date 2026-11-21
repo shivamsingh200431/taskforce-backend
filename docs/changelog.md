@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased — Release Cleanup
+## Unreleased — Chore Review Lifecycle
 
 ### Fixed
 - Server configuration now reads and parses the standard `PORT` environment variable.
@@ -39,3 +39,11 @@
 ### Verification
 - Unit, model, service, API, and MongoDB integration coverage was added for the recurring chore engine.
 - The integration suite uses a dedicated TEST_MONGO_URI and verifies real persistence, unique-index, and scheduler state behavior.
+
+
+### Added
+- Distinct `needs-improvement` review status for member-submitted chores.
+- Member resubmission from both rejected and needs-improvement states.
+- Review history entries that retain earlier feedback and admin decisions.
+- Household/assignee authorization and state-transition regression tests.
+- Updated workflow and database documentation to use the implemented `RecurringChoreTemplate` and `Chore` model names.
