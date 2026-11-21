@@ -7,12 +7,15 @@ This roadmap records implemented backend capabilities separately from work that 
 - [x] Correct the server to read the standard `PORT` environment variable.
 - [x] Align project and API documentation with the implemented routes.
 - [x] Add automated CI coverage for the Node.js test suite and MongoDB integration tests.
+- [ ] Verify the new CI workflow passes on the cleanup branch.
 - [ ] Review production environment configuration and deployment settings.
 - [ ] Perform a final end-to-end API review against a clean database.
 
 ---
 
-## Sprint 1 — Authentication <badge>Completed</badge>
+## Sprint 1 — Authentication
+
+**Status: Completed**
 
 - User registration and login
 - Password hashing
@@ -20,14 +23,18 @@ This roadmap records implemented backend capabilities separately from work that 
 - Protected routes
 - Login rate limiting
 
-## Sprint 2 — Household Management <badge>Completed</badge>
+## Sprint 2 — Household Management
+
+**Status: Completed**
 
 - Household creation
 - Invite-code joining
 - Household membership
 - Admin/member roles
 
-## Sprint 3 — Basic Chore Management <badge>Implemented</badge>
+## Sprint 3 — Basic Chore Management
+
+**Status: Implemented**
 
 - Create and list chores
 - Admin assignment to household members
@@ -35,7 +42,9 @@ This roadmap records implemented backend capabilities separately from work that 
 - Difficulty suggestions
 - Household membership checks
 
-## Sprint 4 — Chore Review Lifecycle <badge color="warning">In progress</badge>
+## Sprint 4 — Chore Review Lifecycle
+
+**Status: In progress**
 
 ### Implemented
 - Admin approval
@@ -49,7 +58,9 @@ This roadmap records implemented backend capabilities separately from work that 
 - Add explicit transition validation and lifecycle regression tests.
 - Decide whether lifecycle history should be persisted separately.
 
-## Sprint 5 — Recurring Chore Engine <badge>Completed</badge>
+## Sprint 5 — Recurring Chore Engine
+
+**Status: Completed**
 
 ### Implemented
 - Recurring chore templates
@@ -71,7 +82,9 @@ This roadmap records implemented backend capabilities separately from work that 
 
 ---
 
-## Sprint 6 — Household Collaboration <badge color="secondary">Planned</badge>
+## Sprint 6 — Household Collaboration
+
+**Status: Planned**
 
 - Optional proof uploads
 - Household notifications
@@ -79,7 +92,9 @@ This roadmap records implemented backend capabilities separately from work that 
 - Anonymous reports
 - Audited administrative actions
 
-## Sprint 7 — Analytics <badge color="secondary">Planned</badge>
+## Sprint 7 — Analytics
+
+**Status: Planned**
 
 - Leaderboards
 - Member and household statistics
@@ -87,14 +102,18 @@ This roadmap records implemented backend capabilities separately from work that 
 - Difficulty and workload analytics
 - Monthly reports
 
-## Sprint 8 — Productivity <badge color="secondary">Planned</badge>
+## Sprint 8 — Productivity
+
+**Status: Planned**
 
 - Reminder notifications
 - Streaks and achievements
 - Badges
 - Smart suggestions
 
-## Sprint 9 — Administration <badge color="secondary">Planned</badge>
+## Sprint 9 — Administration
+
+**Status: Planned**
 
 - Household settings
 - Invite management and expiry
