@@ -13,7 +13,7 @@ const { startSchedulerLoop, runSchedulerTick } = recurringSchedulerService;
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = Number.parseInt(process.env.PORT || "5000", 10);
 
 app.use(express.json());
 
