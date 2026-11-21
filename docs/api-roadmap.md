@@ -1,266 +1,199 @@
 # TaskForce API Roadmap
 
-This document tracks the development progress of the TaskForce backend.
+This document tracks the backend API that exists in the repository today and separates it from proposed endpoints.
 
-Each sprint represents a major milestone in the application's architecture.
+All household, chore, and recurring-chore endpoints are authenticated. Household-specific operations also enforce membership and role permissions.
 
 ---
 
 # Sprint 1 — Authentication
 
-## Status
+**Status: Completed**
 
-Completed ✅
+### Implemented
+- User registration
+- User login
+- Password hashing
+- JWT authentication
+- Protected routes
+- Login rate limiting
 
-### Features
-
-* User Registration
-* User Login
-* Password Hashing
-* JWT Authentication
-* Protected Routes
-* Rate Limiting
-
-### Endpoints
-
-POST /api/auth/register
-
-POST /api/auth/login
+### Routes
+| Method | Endpoint |
+|---|---|
+| POST | `/api/auth/register` |
+| POST | `/api/auth/login` |
+| GET | `/api/auth/profile` |
 
 ---
 
 # Sprint 2 — Household Management
 
-## Status
+**Status: Completed**
 
-Completed ✅
+### Implemented
+- Create household
+- Join household using invite code
+- Household membership
+- Admin/member roles
 
-### Features
-
-* Create Household
-* Join Household
-* Household Membership
-* Invite Codes
-* Role Management
-
-### Endpoints
-
-POST /api/households
-
-POST /api/households/join
-
-GET /api/households
+### Routes
+| Method | Endpoint |
+|---|---|
+| POST | `/api/households` |
+| POST | `/api/households/join` |
+| GET | `/api/households/me` |
 
 ---
 
 # Sprint 3 — Basic Chore Management
 
-## Status
+**Status: Implemented**
 
-Completed ✅
+### Implemented
+- Create chores
+- List household chores
+- Admin assignment to household members
+- Member-submitted chores
+- Assignment and membership validation
 
-### Features
-
-* Create Chore
-* View Household Chores
-* Assignment Validation
-* Difficulty Suggestions
-
-### Endpoints
-
-POST /api/chores
-
-GET /api/chores
+### Routes
+| Method | Endpoint |
+|---|---|
+| POST | `/api/chores` |
+| GET | `/api/chores?householdId=:id` |
 
 ---
 
-# Sprint 4 — Review Workflow
+# Sprint 4 — Chore Review Lifecycle
 
-## Status
+**Status: In Progress**
 
-In Progress 🚧
-
-### Completed
-
-* Admin Approval
-* Admin Rejection
-* Feedback
-* Source Tracking
-* Permission Checks
+### Implemented
+- Admin approval
+- Admin rejection
+- Feedback
+- Source tracking
+- Household permission checks
+- Assigned-member completion endpoint
 
 ### Remaining
+- Distinct needs-improvement state and admin response
+- Member resubmission endpoint
+- Admin re-review after resubmission
+- Explicit allowed-transition rules and regression tests
 
-* Completion Workflow
-* Needs Improvement Workflow
-* Resubmission Workflow
+### Implemented routes
+| Method | Endpoint |
+|---|---|
+| PATCH | `/api/chores/:id/approve` |
+| PATCH | `/api/chores/:id/reject` |
+| PATCH | `/api/chores/:id/complete` |
 
-### Endpoints
+### Proposed route
+| Method | Endpoint | Status |
+|---|---|---|
+| PATCH | `/api/chores/:id/resubmit` | Not implemented |
 
-PATCH /api/chores/:id/approve
-
-PATCH /api/chores/:id/reject
-
-PATCH /api/chores/:id/complete (Planned)
-
-PATCH /api/chores/:id/resubmit (Planned)
+The current `needsImprovement` request field does not yet provide a separate persisted lifecycle state. The workflow must be designed before adding the resubmission endpoint; do not treat the proposed route as available.
 
 ---
 
 # Sprint 5 — Recurring Chore Engine
 
-## Status
+**Status: Completed**
 
-Planned
+### Implemented
+- Recurring chore templates
+- Daily, weekly, monthly, and yearly recurrence
+- Historical `Chore` occurrences
+- Fixed assignment and workload-aware rotation
+- Difficulty-weighted balancing
+- Manual, normal, and recovery generation
+- Idempotent occurrence creation
+- Scheduler with atomic claims and processing leases
+- Bounded catch-up and per-template failure isolation
 
-### Features
+### Implemented routes
+| Method | Endpoint |
+|---|---|
+| POST | `/api/recurring-chores` |
+| GET | `/api/recurring-chores` |
+| GET | `/api/recurring-chores/:id` |
+| PATCH | `/api/recurring-chores/:id` |
+| DELETE | `/api/recurring-chores/:id` |
+| POST | `/api/recurring-chores/:id/generate` |
 
-* Calendar Engine
-* Chore Templates
-* Chore Instances
-* Rotation Engine
-* Workload Balancer
-* Availability System
-* Shared Contributors
-
-### Planned Endpoints
-
-POST /api/chore-templates
-
-GET /api/chore-templates
-
-PATCH /api/chore-templates/:id
-
-DELETE /api/chore-templates/:id
-
-GET /api/chore-instances
-
-PATCH /api/chore-instances/:id/complete
-
-PATCH /api/chore-instances/:id/reassign
+The recurring-chore routes require authentication. Household membership and admin checks are enforced in the recurring-chore controller/service flow.
 
 ---
 
 # Sprint 6 — Household Collaboration
 
-## Status
+**Status: Planned**
 
-Planned
+### Proposed features
+- Anonymous reports
+- Audited identity access
+- Activity feed
+- Household notifications
+- Optional proof uploads
 
-### Features
-
-* Anonymous Reports
-* Audit Logs
-* Activity Feed
-* Household Notifications
-
-### Planned Endpoints
-
-POST /api/reports
-
-GET /api/reports
-
-PATCH /api/reports/:id/review
-
-GET /api/activity
+No Sprint 6 API routes are implemented yet.
 
 ---
 
 # Sprint 7 — Analytics
 
-## Status
+**Status: Planned**
 
-Planned
+### Proposed features
+- Leaderboards
+- Monthly reports
+- Member statistics
+- Household statistics
+- Difficulty analytics
+- Completion rates
 
-### Features
-
-* Leaderboards
-* Monthly Reports
-* Member Statistics
-* Household Statistics
-* Difficulty Analytics
-* Completion Rate
-
-### Planned Endpoints
-
-GET /api/leaderboard
-
-GET /api/statistics/member/:id
-
-GET /api/statistics/household/:id
-
-GET /api/reports/monthly
+No Sprint 7 API routes are implemented yet.
 
 ---
 
 # Sprint 8 — Productivity
 
-## Status
+**Status: Planned**
 
-Planned
-
-### Features
-
-* Reminder Notifications
-* Smart Suggestions
-* Streak System
-* Achievements
-* Badges
+### Proposed features
+- Reminder notifications
+- Smart suggestions
+- Streaks
+- Achievements and badges
 
 ---
 
 # Sprint 9 — Administration
 
-## Status
+**Status: Planned**
 
-Planned
-
-### Features
-
-* Household Settings
-* Invite Management
-* Chore Categories
-* Permission Management
-* Backup & Restore
+### Proposed features
+- Household settings
+- Invite management and expiry
+- Chore categories
+- Permission management
+- Backup and restore
 
 ---
 
-# Future Ideas
+# Current implementation summary
 
-* AI workload balancing
-* Smart difficulty prediction
-* Voice reminders
-* Mobile application
-* Offline support
-* Family calendar integration
-
----
-
-# Current Progress
-
-Authentication
-
-██████████ 100%
-
-Households
-
-██████████ 100%
-
-Basic Chores
-
-██████████ 100%
-
-Review Workflow
-
-████████░░ 80%
-
-Recurring Engine
-
-░░░░░░░░░░ 0%
-
-Collaboration
-
-░░░░░░░░░░ 0%
-
-Analytics
-
-░░░░░░░░░░ 0%
+| Area | Status |
+|---|---|
+| Authentication | Completed |
+| Household management | Completed |
+| Basic chore APIs | Implemented |
+| Chore review lifecycle | In progress |
+| Recurring chore engine | Completed |
+| Collaboration | Planned |
+| Analytics | Planned |
+| Productivity | Planned |
+| Administration | Planned |

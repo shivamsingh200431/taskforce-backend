@@ -77,7 +77,9 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
         ({ runSchedulerTick } =
             require("../../src/services/recurringScheduler.service.cjs"));
 
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGO_URI, {
+            dbName: "taskforce_recurring_mongo_integration"
+        });
         assert.equal(mongoose.connection.readyState, 1);
     });
 
@@ -190,9 +192,14 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
     });
 
     await t.test("scheduler persists nextRunAt and clears its lease", async () => {
+        const schedulerAssigneeId = new mongoose.Types.ObjectId();
         const template = makeTemplate({
             _id: new mongoose.Types.ObjectId(),
             title: "Scheduler integration " + crypto.randomUUID().slice(0, 8),
+            assignment: {
+                strategy: "fixed",
+                assignedTo: schedulerAssigneeId
+            },
             schedulerMetadata: {
                 nextRunAt: new Date("2026-09-26T00:00:00.000Z"),
                 lastProcessedAt: null,
@@ -200,6 +207,11 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             }
         });
 
+        await Membership.create({
+            userId: schedulerAssigneeId,
+            householdId: ids.householdId,
+            role: "member"
+        });
         await RecurringChoreTemplate.create(template);
 
         const result = await runSchedulerTick(
@@ -227,9 +239,14 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
     });
 
     await t.test("scheduler persists null when the template has no future occurrence", async () => {
+        const finalOccurrenceAssigneeId = new mongoose.Types.ObjectId();
         const template = makeTemplate({
             _id: new mongoose.Types.ObjectId(),
             title: "Final occurrence " + crypto.randomUUID().slice(0, 8),
+            assignment: {
+                strategy: "fixed",
+                assignedTo: finalOccurrenceAssigneeId
+            },
             activePeriod: {
                 startsAt: new Date("2026-09-26T00:00:00.000Z"),
                 endsAt: new Date("2026-09-26T23:59:59.000Z")
@@ -241,6 +258,11 @@ describeIntegration("MongoDB recurring chore integration", async (t) => {
             }
         });
 
+        await Membership.create({
+            userId: finalOccurrenceAssigneeId,
+            householdId: ids.householdId,
+            role: "member"
+        });
         await RecurringChoreTemplate.create(template);
 
         const result = await runSchedulerTick(

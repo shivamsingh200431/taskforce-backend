@@ -76,7 +76,9 @@ describeIntegration("Recurring chore API integration", async (t) => {
             (await import("../../src/models/RecurringChoreTemplate.js")).default;
         ({ default: app } = await import("../../src/server.js"));
 
-        await mongoose.connect(MONGO_URI);
+        await mongoose.connect(MONGO_URI, {
+            dbName: "taskforce_recurring_api_integration"
+        });
         server = await new Promise((resolve) => {
             const httpServer = app.listen(0, () => resolve(httpServer));
         });

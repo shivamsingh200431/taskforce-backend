@@ -13,7 +13,7 @@ const { startSchedulerLoop, runSchedulerTick } = recurringSchedulerService;
 dotenv.config();
 
 const app = express();
-const Port = process.env.Port || 5000;
+const port = Number.parseInt(process.env.PORT || "5000", 10);
 
 app.use(express.json());
 
@@ -32,8 +32,8 @@ const startServer = async () => {
 
     const scheduler = startSchedulerLoop();
 
-    const server = app.listen(Port, () => {
-        console.log(`server running on port ${Port}`);
+    const server = app.listen(port, () => {
+        console.log(`server running on port ${port}`);
     });
 
     const shutdown = async () => {

@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — Release Cleanup
+
+### Fixed
+- Server configuration now reads and parses the standard `PORT` environment variable.
+
+### Changed
+- Refreshed the project README and API roadmap to match implemented endpoints.
+- Corrected architecture documentation to describe the existing recurring-chore services.
+- Clarified that availability-based redistribution, shared contributors, reporting, and collaboration features remain planned.
+
+### Added
+- GitHub Actions workflow for automated Node.js and MongoDB-backed test execution.
+- Isolated the MongoDB integration suites and their scheduler fixtures to prevent cross-suite test data interference.
+
+### Verification
+- GitHub Actions CI passed on Node.js 22 and MongoDB 7.0: 62 tests passed, 0 failed, 0 skipped.
+
 ## v0.5.0 — Recurring Chore Engine
 
 ### Added
