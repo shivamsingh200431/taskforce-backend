@@ -229,7 +229,9 @@ const approveChore = async (req, res) => {
         await chore.save();
 
         res.status(200).json({
-            message: "Chore approved successfully",
+            message: decision === "approved"
+                ? "Chore approved successfully"
+                : "Chore marked as needing improvement",
             chore
         });
     } catch (error) {
