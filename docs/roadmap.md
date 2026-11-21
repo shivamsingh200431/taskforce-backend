@@ -7,7 +7,7 @@ This roadmap records implemented backend capabilities separately from work that 
 - [x] Correct the server to read the standard `PORT` environment variable.
 - [x] Align project and API documentation with the implemented routes.
 - [x] Add automated CI coverage for the Node.js test suite and MongoDB integration tests.
-- [ ] Verify the new CI workflow passes on the cleanup branch.
+- [x] Verify the new CI workflow passes on the cleanup branch (62 passed, 0 failed, 0 skipped).
 - [ ] Review production environment configuration and deployment settings.
 - [ ] Perform a final end-to-end API review against a clean database.
 
