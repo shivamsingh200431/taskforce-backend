@@ -10,7 +10,7 @@ The purpose is to document not only the chosen solution, but also the reasoning 
 
 ## Title
 
-Separate Recurring Chores into Templates and Instances
+Separate Recurring Chores into Templates and Occurrences
 
 ## Status
 
@@ -30,14 +30,12 @@ Resetting the same database document would overwrite:
 
 ## Decision
 
-Recurring chores will use two models.
+Recurring chores use two persisted concepts:
 
-* ChoreTemplate
-* ChoreInstance
+* `RecurringChoreTemplate` — the recurring rule and schedule.
+* `Chore` — an actual chore occurrence, linked to its template through `recurringTemplateId`.
 
-Templates describe recurring rules.
-
-Instances represent actual occurrences.
+Each occurrence records its `occurrenceDate` and `generationType`. This preserves the history of individual occurrences instead of resetting one document.
 
 ## Alternatives Considered
 
@@ -76,9 +74,9 @@ Generating chores only when users open the application causes:
 
 ## Decision
 
-Recurring chore instances are generated automatically according to the calendar.
+Recurring chore occurrences are generated automatically according to the calendar by the backend scheduler.
 
-The system should remain aware of dates even when no users are online.
+The system remains aware of due dates even when no users are online, while generation is bounded by the configured catch-up limit.
 
 ## Alternatives Considered
 
@@ -89,7 +87,7 @@ Rejected because it tightly couples business logic with user activity.
 ## Benefits
 
 * Faster requests
-* Reliable notifications
+* Reliable future notification foundation
 * Accurate historical data
 * Easier analytics
 
@@ -119,6 +117,8 @@ Workload Balancer
 
 Redistributes work when members become unavailable.
 
+The current recurring engine implements fixed assignment and workload-aware rotation. A separate availability-driven redistribution subsystem remains future work.
+
 ## Benefits
 
 * Clear separation of responsibilities
@@ -136,7 +136,7 @@ Anonymous Reporting with Audited Identity Access
 
 ## Status
 
-Accepted
+Accepted — planned capability
 
 ## Problem
 
@@ -151,6 +151,8 @@ Reports remain anonymous by default.
 Reporter identity is stored securely.
 
 Identity may only be revealed through an audited administrative action with a required reason.
+
+This is a product/architecture decision; the reporting subsystem is not yet implemented.
 
 ## Benefits
 
@@ -168,7 +170,7 @@ Availability Is Household Specific
 
 ## Status
 
-Accepted
+Accepted — planned capability
 
 ## Problem
 
@@ -186,6 +188,8 @@ Availability includes:
 
 Historical availability should be preserved.
 
+This is a design decision for a future availability subsystem and is not part of the current recurring engine.
+
 ## Benefits
 
 * Flexible scheduling
@@ -202,7 +206,7 @@ Shared Chore Contributions
 
 ## Status
 
-Accepted
+Accepted — planned capability
 
 ## Problem
 
@@ -210,7 +214,7 @@ Some chores may need multiple contributors during workload redistribution.
 
 ## Decision
 
-Chore Instances may contain multiple contributors.
+Chore occurrences may contain multiple contributors.
 
 Each contributor receives a configurable share of points.
 
@@ -219,6 +223,8 @@ Examples include:
 * Shared dishwashing
 * Large cleaning tasks
 * Temporary workload balancing
+
+This capability is not implemented in the current Chore model.
 
 ## Benefits
 
