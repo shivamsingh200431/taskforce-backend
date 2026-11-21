@@ -6,7 +6,7 @@ TaskForce is designed around one core principle:
 
 > Preserve historical data instead of overwriting it.
 
-Every completed, missed, rejected, approved, or reassigned chore should remain available for analytics, leaderboards, reports, audit logs, and historical tracking.
+Each recurring occurrence is stored as its own `Chore` record so completion and review data remain associated with the original work.
 
 ---
 
@@ -14,78 +14,25 @@ Every completed, missed, rejected, approved, or reassigned chore should remain a
 
 ## 1. Calendar Driven
 
-Recurring chores are generated automatically according to the calendar.
+Recurring chores are generated automatically according to the calendar. The backend scheduler does not wait for a user to open the application.
 
-The system should not wait for a user to open the application before creating recurring chores.
+## 2. Templates Define Future Work
 
-Benefits:
-
-* Faster dashboard loading
-* Reliable notifications
-* Accurate history
-* Missed chore tracking
-* Calendar view
-
----
-
-## 2. Templates Never Change
-
-Recurring chores are stored as templates.
-
-Example:
-
-Wash Dishes
-
-Every Day
-
-Difficulty 3
-
-Rotation Enabled
-
-The template represents the rule.
-
-It does not represent an actual occurrence.
-
----
+A `RecurringChoreTemplate` stores recurrence rules and assignment settings. Editing a template changes future generation; it does not rewrite existing `Chore` occurrences.
 
 ## 3. Every Occurrence Is Stored
 
-Each occurrence becomes its own Chore Instance.
+Each occurrence is a separate `Chore` document with its own:
 
-Example:
+- Household and assigned member
+- Occurrence date and due date
+- Completion and approval states
+- Generation type
+- Snapshot of the template's chore details
 
-Monday
+## 4. History Is Preserved
 
-Wash Dishes
-
-Assigned to Aman
-
-Completed
-
-Tuesday
-
-Wash Dishes
-
-Assigned to Shivam
-
-Missed
-
-This preserves complete history.
-
----
-
-## 4. History Is Never Lost
-
-Historical information is required for:
-
-* Leaderboards
-* Statistics
-* Proof history
-* Audit logs
-* Monthly reports
-* Calendar view
-
-No recurring chore should overwrite previous completions.
+The system retains individual occurrences and the review decisions attached to member-submitted chores. Additional audit records, proof history, reports, leaderboards, and analytics remain planned domains.
 
 ---
 
@@ -95,170 +42,48 @@ No recurring chore should overwrite previous completions.
 
 Stores user authentication information.
 
----
-
 ## Household
 
 Represents a household.
 
 One household contains multiple members.
 
----
-
 ## Membership
 
-Connects Users and Households.
+Connects Users and Households and stores the household role and join metadata.
 
-Stores:
+## RecurringChoreTemplate
 
-* Role
-* Joined Date
+Represents a recurring rule, including its schedule, assignment strategy, metadata, and scheduler progress.
 
-Future:
+A template is not itself an occurrence and cannot be completed.
 
-* Rotation Position
-* Household-specific Preferences
+## Chore
 
----
+Represents actual work. It can be a one-time chore or a generated recurring occurrence.
 
-## Availability
+Important fields include:
 
-Represents temporary member unavailability.
+- `householdId`
+- `assignedTo`
+- `createdBy`
+- `choreType`
+- `recurringTemplateId` and `occurrenceDate` for recurring occurrences
+- `generationType` for recurring occurrences
+- `approvalStatus`
+- `completionStatus`
+- `feedback`
+- `reviewHistory` for member-submission and admin review events
 
-Fields:
+## Future Models
 
-* Household
-* User
-* Start Date
-* End Date
-* Optional Reason
+These are not currently implemented:
 
-Purpose:
-
-Allows the rotation engine to ignore unavailable members while preserving historical availability records.
-
----
-
-## Chore Template
-
-Represents a recurring rule.
-
-Example:
-
-Wash Dishes
-
-Every Day
-
-Rotate Weekly
-
-Difficulty 3
-
-The template is never completed.
-
-It only defines future chore generation.
-
----
-
-## Chore Instance
-
-Represents one occurrence of a chore.
-
-Example:
-
-Date
-
-Assigned Members
-
-Completion Status
-
-Proof
-
-Feedback
-
-Reports
-
-This is the heart of the system.
-
-Leaderboards, reports and analytics will all use Chore Instances.
-
----
-
-## Report
-
-Represents a report submitted by a household member.
-
-Reports are anonymous to members.
-
-Reporter identity is hidden by default from admins.
-
-Reporter identity may only be revealed through an audited action.
-
----
-
-## Audit Log
-
-Stores sensitive administrative actions.
-
-Examples:
-
-* Revealed reporter identity
-* Changed difficulty
-* Reassigned chores
-* Manual workload override
-* Deleted future records
-
-Audit logs provide accountability.
-
----
-
-# Services
-
-## Calendar Engine
-
-Responsible for:
-
-* Detecting new day/week/month
-* Creating recurring chore instances
-* Preventing duplicate generation
-
----
-
-## Rotation Engine
-
-Responsible for:
-
-Selecting the next member for recurring chores.
-
-It only answers:
-
-Who should receive the next occurrence?
-
----
-
-## Workload Balancer
-
-Responsible for:
-
-Redistributing chores when members become unavailable.
-
-Supports:
-
-* Automatic balancing
-* Admin overrides
-
----
-
-## Notification Service
-
-Future feature.
-
-Will notify members about:
-
-* New chores
-* Upcoming chores
-* Missed chores
-* Reports
-* Approvals
+- Availability
+- Report
+- AuditLog
+- Notification
+- Attachment / proof metadata
 
 ---
 
@@ -266,81 +91,58 @@ Will notify members about:
 
 ## One-Time Admin Assigned
 
-Admin Creates
+1. Admin creates and assigns the chore to a household member.
+2. The chore is created with `source: admin-assigned`, `approvalStatus: approved`, and `completionStatus: pending`.
+3. The assigned member marks it complete.
+4. `completionStatus` becomes `completed`.
 
-↓
+## Member Submitted
 
-Assigned
+1. Member submits work for admin review.
+2. The chore is stored with `source: member-submitted`, `approvalStatus: pending`, and `completionStatus: pending`.
+3. An admin chooses one of three decisions:
 
-↓
+| Decision | `approvalStatus` | `completionStatus` |
+|---|---|---|
+| Approved | `approved` | `completed` |
+| Needs improvement | `needs-improvement` | `pending` |
+| Rejected | `rejected` | `pending` |
 
-Member Completes
-
-↓
-
-Admin Reviews
-
-↓
-
-Completed
-
-or
-
-Needs Improvement
-
----
+4. A member may revise and resubmit a chore in either the `needs-improvement` or `rejected` state.
+5. Resubmission returns the chore to `pending` for another admin review.
+6. `reviewHistory` retains the earlier feedback and decisions.
 
 ## Recurring Chore
 
-Calendar Creates Instance
-
-↓
-
-Assigned
-
-↓
-
-Member Marks Complete
-
-↓
-
-Completed
-
-↓
-
-Admin may manually revert completion if required.
+1. The scheduler identifies a due `RecurringChoreTemplate`.
+2. It generates a separate `Chore` occurrence and resolves an eligible assignee.
+3. The occurrence preserves the template details as they were at generation time.
+4. The assigned member completes the occurrence through the completion endpoint.
 
 ---
 
-## Member Submitted Chore
+# Services
 
-Member Creates
+## Recurrence and Scheduler
 
-↓
+Calculate due dates, claim due templates, create idempotent occurrences, and track scheduler progress.
 
-Pending Review
+## Assignment
 
-↓
+Resolve fixed assignments and select rotation assignees using workload and recent history.
 
-Approved
+## Household Permissions
 
-or
+Resolve household membership and admin privileges.
 
-Rejected
+## Future Services
 
-Rejected chores remain visible and can be revised and resubmitted.
-
----
-
-# Reporting Principles
-
-Reports are anonymous to members.
-
-Reporter identity is stored securely.
-
-Admins must provide a reason before revealing reporter identity.
-
-Identity reveal actions are permanently logged.
+- Availability and workload redistribution
+- Notification delivery
+- Reports and anonymous reporting
+- Broader audit logging
+- Analytics and leaderboards
+- Proof upload and storage
 
 ---
 
@@ -348,9 +150,9 @@ Identity reveal actions are permanently logged.
 
 TaskForce prioritizes:
 
-* Fairness
-* Transparency
-* Historical accuracy
-* Accountability
-* Automation where appropriate
-* Human oversight for important decisions
+- Fairness
+- Transparency
+- Historical accuracy
+- Accountability
+- Automation where appropriate
+- Human oversight for important decisions
