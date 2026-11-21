@@ -1,92 +1,47 @@
 # TaskForce System Workflows
 
-This document describes how the major systems inside TaskForce operate.
-
-It focuses on application behaviour rather than implementation details.
+This document describes the workflows currently implemented by the TaskForce backend and identifies capabilities that remain planned.
 
 ---
 
 # Recurring Chore Workflow
 
-Recurring chores are managed using two separate models.
+Recurring chores use two persisted concepts.
 
 ## RecurringChoreTemplate
 
-Stores:
+Stores the recurrence rule, assignment strategy, schedule, and scheduler metadata. It defines future work; it is not itself a chore to complete.
 
-- recurrence rules
-- assignment strategy
-- scheduling information
+## Chore occurrence
 
-Templates never represent actual work.
-
----
-
-## ChoreInstance
-
-Represents one occurrence of a recurring chore.
-
-Every generated instance is independent.
-
-Changes made to the template do not modify historical instances.
+Each generated occurrence is a normal persisted `Chore` document linked to its template through `recurringTemplateId`. It has its own assigned member, due date, completion status, occurrence date, and generation type. Later template edits do not rewrite existing occurrences.
 
 ---
 
 # Daily Generation Workflow
 
-Every day:
+The backend scheduler:
 
-Scheduler
+1. Finds due recurring templates.
+2. Claims each template with an atomic processing lease.
+3. Calculates due occurrence dates.
+4. Resolves the fixed or rotation assignee.
+5. Creates idempotent `Chore` occurrence records.
+6. Stores scheduler progress and releases the lease.
 
-↓
-
-Calendar Service
-
-↓
-
-Recurring Templates
-
-↓
-
-Generate Chore Instances
-
-↓
-
-Store in Database
-
-↓
-
-Notification Service
-
----
-
-Generation always occurs before notifications.
+Catch-up is bounded to avoid unbounded historical generation. A failed template is isolated from other due templates.
 
 ---
 
 # Recovery Workflow
 
-If the server is offline:
+When the scheduler has been offline, it identifies missed dates within the configured catch-up window and creates those occurrences with:
 
-Calendar Service compares
+- `normal` for the current calendar date
+- `recovery` for an earlier missed date
+- `manual` for an admin-triggered generation
 
-lastGeneratedDate
-
-with
-
-today
-
-and generates every missing occurrence.
-
-Generated instances are marked with:
-
-Generation Type
-
-- Normal
-- Recovery
-- Manual
-
-Recovery-generated chores require additional review before approval.
+**Additional approval for recovery-generated chores remains a product requirement to implement.** The current occurrence generator assigns and approves generated chores using the existing admin-assigned completion flow.
 
 ---
 
@@ -96,93 +51,79 @@ Assignment strategies:
 
 ## Fixed
 
-The same member always receives the chore.
+The same configured household member receives each occurrence. Generation does not silently assign the chore to another person if that member is no longer eligible.
 
 ## Rotation
 
-Assignment is determined by the Rotation Service.
-
-Unavailable members are skipped during assignment.
+Assignment is selected from household members using current workload, recent assignment burden, and recent difficulty burden. A separate availability-driven redistribution service is not implemented yet.
 
 ---
 
-# Completion Workflow
+# One-Time Chore Workflows
 
-Pending
+## Admin-assigned chore
 
-↓
+Admin creates and assigns a chore.
 
-Pending Review (if review required)
+The assigned member completes the chore through the completion endpoint. The persisted completion state changes from `pending` to `completed`.
 
-↓
+## Member-submitted chore
 
-Approved
+A member submits work for review.
 
-OR
+```text
+Member submits
+      |
+      v
+   pending
+   /  |  \
+  /   |   \
+approve | reject
+  |    |    |
+  v    v    v
+approved needs-improvement rejected
+           \          /
+            \        /
+              resubmit
+                 |
+                 v
+               pending
+```
 
-↓
+- `approved` means the submission is accepted and completed.
+- `needs-improvement` means the member must correct or finish the work before resubmitting.
+- `rejected` means the submission is not accepted; the member may revise it and resubmit.
+- Resubmission is limited to the submitting member and returns the chore to admin review.
+- Prior submissions and review decisions are retained in `reviewHistory`.
 
-Needs Improvement
-
-OR
-
-↓
-
-Rejected
-
----
-
-Some chores may become:
-
-Overdue
-
-or
-
-Skipped
-
-depending on household actions.
+See [chore-lifecycle.md](chore-lifecycle.md) for the complete transition rules.
 
 ---
 
 # Notification Workflow
 
-Generation and notifications are independent.
+Generation and notifications are separate responsibilities.
 
-Generation creates work.
-
-Notifications remind members about work.
-
-Preferred Completion Time controls reminders.
-
-It does not affect generation.
+Generation creates chore records. A future notification service can remind members about new, upcoming, or overdue work. Notification delivery is not implemented yet.
 
 ---
 
 # Audit Workflow
 
-Every important action creates a history entry.
+The Chore model's `reviewHistory` records member submissions, admin decisions, feedback, and resubmissions.
 
-Examples:
-
-- Generated
-- Assigned
-- Reassigned
-- Completed
-- Approved
-- Rejected
-- Skipped
-- Comments
-- Attachments
-
-History should provide a complete audit trail of a chore's lifecycle.
+A broader audit service for assignments, completions, manual overrides, attachments, reports, and sensitive administrative actions remains planned.
 
 ---
 
 # Future Systems
 
-Planned services include:
+Planned capabilities include:
 
-- Suggestion Service
-- Analytics
-- Smart Workload Balancing
-- AI Recommendations
+- Notifications
+- Proof uploads and attachments
+- Activity feed and broader audit logs
+- Anonymous reporting
+- Analytics and leaderboards
+- Availability-based workload redistribution
+- Smart scheduling and suggestions

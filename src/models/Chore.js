@@ -6,6 +6,38 @@ const RECURRING_GENERATION_TYPES = [
     "manual"
 ];
 
+const choreReviewHistorySchema = new mongoose.Schema(
+    {
+        action: {
+            type: String,
+            enum: [
+                "submitted",
+                "approved",
+                "needs-improvement",
+                "rejected",
+                "resubmitted"
+            ],
+            required: true
+        },
+        actorId: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+            required: true
+        },
+        feedback: {
+            type: String,
+            default: ""
+        },
+        createdAt: {
+            type: Date,
+            default: Date.now
+        }
+    },
+    {
+        _id: false
+    }
+);
+
 const choreSchema = new mongoose.Schema(
     {
         title: {
@@ -89,8 +121,13 @@ const choreSchema = new mongoose.Schema(
 
         approvalStatus: {
             type: String,
-            enum: ["pending", "approved", "rejected"],
+            enum: ["pending", "approved", "needs-improvement", "rejected"],
             default: "approved"
+        },
+
+        reviewHistory: {
+            type: [choreReviewHistorySchema],
+            default: []
         },
 
         source: {

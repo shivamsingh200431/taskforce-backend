@@ -23,7 +23,9 @@ TaskForce is a household chore management backend built with **Node.js**, **Expr
 - Create and list household chores
 - Admin assignment to household members
 - Member-submitted chores for admin review
-- Admin approval or rejection with feedback
+- Admin approval, needs-improvement, and rejection decisions
+- Member resubmission with household/assignee authorization
+- Preserved review feedback and decision history
 - Assigned-member completion endpoint
 
 ### Recurring chore engine
@@ -51,7 +53,7 @@ All routes except registration and login require authentication where indicated.
 | POST | `/api/chores` | Create/submit a chore |
 | GET | `/api/chores?householdId=:id` | List household chores |
 | PATCH | `/api/chores/:id/approve` | Approve a submitted chore |
-| PATCH | `/api/chores/:id/reject` | Reject a submitted chore |
+| PATCH | `/api/chores/:id/reject` | Reject a submitted chore |\n| PATCH | `/api/chores/:id/resubmit` | Revise and resubmit a rejected or needs-improvement chore |
 | PATCH | `/api/chores/:id/complete` | Mark an assigned chore complete |
 | POST | `/api/recurring-chores` | Create a recurring template |
 | GET | `/api/recurring-chores` | List recurring templates |
@@ -147,7 +149,7 @@ docs/
 ## Current roadmap
 
 - **Completed:** Authentication, household management, basic chore APIs, recurring chore engine.
-- **In progress:** Explicit needs-improvement and resubmission workflow; final release hardening.
+- **Implemented:** Explicit needs-improvement, rejection, resubmission, and review-history workflow.\n- **In progress:** Final release hardening.
 - **Planned:** Proof uploads, notifications, activity feed, audit logs, analytics, and productivity features.
 
 See [docs/roadmap.md](docs/roadmap.md) and [docs/api-roadmap.md](docs/api-roadmap.md) for the detailed status.
