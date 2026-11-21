@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.5.1 — Release Cleanup
+
+### Fixed
+- Server configuration now reads the standard `PORT` environment variable.
+
+### Changed
+- Refreshed the project README and API roadmap to match implemented endpoints.
+- Corrected architecture documentation to describe the existing recurring-chore services.
+- Clarified that availability-based redistribution, shared contributors, reporting, and collaboration features remain planned.
+
+### Added
+- GitHub Actions workflow for automated Node.js and MongoDB-backed test execution.
+
 ## v0.5.0 — Recurring Chore Engine
 
 ### Added
