@@ -67,7 +67,7 @@ All household, chore, and recurring-chore endpoints are authenticated. Household
 
 # Sprint 4 — Chore Review Lifecycle
 
-**Status: Implemented; CI verification pending**
+**Status: Completed**
 
 ### Implemented
 - Admin approval
@@ -184,7 +184,7 @@ No Sprint 7 API routes are implemented yet.
 | Authentication | Completed |
 | Household management | Completed |
 | Basic chore APIs | Implemented |
-| Chore review lifecycle | Implemented; CI verification pending |
+| Chore review lifecycle | Completed |
 | Recurring chore engine | Completed |
 | Collaboration | Planned |
 | Analytics | Planned |
