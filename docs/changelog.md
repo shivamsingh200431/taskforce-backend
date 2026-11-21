@@ -1,21 +1,28 @@
 # Changelog
 
-## Unreleased — Chore Review Lifecycle
+## Unreleased — Chore Review Lifecycle and Release Cleanup
 
 ### Fixed
 - Server configuration now reads and parses the standard `PORT` environment variable.
 
-### Changed
-- Refreshed the project README and API roadmap to match implemented endpoints.
-- Corrected architecture documentation to describe the existing recurring-chore services.
-- Clarified that availability-based redistribution, shared contributors, reporting, and collaboration features remain planned.
-
 ### Added
+- Distinct `needs-improvement` review status for member-submitted chores.
+- Member resubmission from both rejected and needs-improvement states.
+- Review history entries that retain earlier feedback and admin decisions.
+- `PATCH /api/chores/:id/resubmit` with assigned-member and household-membership checks.
+- MongoDB-backed integration coverage for chore review transitions, authorization, and admin-assigned completion.
 - GitHub Actions workflow for automated Node.js and MongoDB-backed test execution.
-- Isolated the MongoDB integration suites and their scheduler fixtures to prevent cross-suite test data interference.
+- Separate MongoDB databases for integration suites to prevent cross-suite test data interference.
+
+### Changed
+- Refreshed the README, API roadmap, architecture, workflow, and database documentation to match implemented routes and model names.
+- Clarified that availability-based redistribution, shared contributors, reporting, notifications, and collaboration features remain planned.
 
 ### Verification
-- GitHub Actions CI passed on Node.js 22 and MongoDB 7.0: 62 tests passed, 0 failed, 0 skipped.
+- Release cleanup: 62 tests passed, 0 failed, 0 skipped on Node.js 22 and MongoDB 7.0.
+- Chore review lifecycle: 69 tests passed, 0 failed, 0 skipped on Node.js 22 and MongoDB 7.0.
+
+---
 
 ## v0.5.0 — Recurring Chore Engine
 
@@ -34,20 +41,8 @@
 
 ### Changed
 - Existing Chore and supporting modules were aligned with the repository's ESM configuration.
-- Recurring templates now retain scheduler state independently from historical Chore instances.
+- Recurring templates retain scheduler state independently from historical Chore instances.
 
 ### Verification
 - Unit, model, service, API, and MongoDB integration coverage was added for the recurring chore engine.
-- The integration suite uses a dedicated TEST_MONGO_URI and verifies real persistence, unique-index, and scheduler state behavior.
-
-
-### Added
-- Distinct `needs-improvement` review status for member-submitted chores.
-- Member resubmission from both rejected and needs-improvement states.
-- Review history entries that retain earlier feedback and admin decisions.
-- Household/assignee authorization and state-transition regression tests.
-- Updated workflow and database documentation to use the implemented `RecurringChoreTemplate` and `Chore` model names.
-
-
-### Verification
-- GitHub Actions passed the lifecycle integration suite on Node.js 22 and MongoDB 7.0: 69 tests passed, 0 failed, 0 skipped.
+- The integration suite uses a dedicated `TEST_MONGO_URI` and verifies real persistence, unique-index, and scheduler state behavior.
