@@ -2,367 +2,120 @@
 
 ## Overview
 
-TaskForce follows a modular backend architecture built with Node.js, Express.js, and MongoDB.
+TaskForce is a modular backend built with Node.js, Express 5, MongoDB, and Mongoose. It separates HTTP routing, authentication and authorization middleware, controllers, domain services, and persistence models.
 
-The application separates responsibilities into models, controllers, middleware, routes, utilities, and future services to keep the codebase scalable and maintainable.
+The architecture is intentionally incremental: simple flows can remain in controllers while recurring-chore generation and scheduler behavior live in dedicated services.
 
 ---
 
-# High Level Architecture
+## High-level request flow
 
+```text
 Client
-
-↓
-
-Routes
-
-↓
-
-Middleware
-
-↓
-
+  |
+  v
+Express Routes
+  |
+  v
+Authentication / Permission Middleware
+  |
+  v
 Controllers
-
-↓
-
-Services (Future)
-
-↓
-
-Database
-
-↓
-
-Response
-
----
-
-# Folder Structure
-
+  |
+  +--> Domain Services (where business logic is shared or complex)
+  |
+  v
+Mongoose Models
+  |
+  v
+MongoDB
+  |
+  v
+HTTP Response
 ```
+
+## Source structure
+
+```text
 src/
-│
 ├── config/
-│
+├── constants/
 ├── controllers/
-│
 ├── middleware/
-│
 ├── models/
-│
 ├── routes/
-│
-├── services/        (Future)
-│
+├── services/
 ├── utils/
-│
 └── server.js
 ```
 
----
+## Responsibilities
 
-# Responsibilities
+### Routes
+Routes define HTTP methods, paths, and middleware composition. They should not contain domain logic.
 
-## Routes
+### Middleware
+Middleware handles cross-cutting request concerns such as JWT authentication, login rate limiting, and access checks.
 
-Routes only define endpoints.
+### Controllers
+Controllers coordinate request handling: validate request data, invoke the appropriate model or service operations, and return HTTP responses. Complex reusable business rules belong in services.
 
-Responsibilities:
+### Services
+Services contain domain operations that need to be reused, tested independently, or coordinated across multiple models.
 
-* Receive requests
-* Apply middleware
-* Call controllers
+The recurring-chore service handles occurrence generation and assignment decisions. The recurring scheduler service finds due templates, claims work atomically with a processing lease, invokes the generation service, and records scheduler progress.
 
-Routes should never contain business logic.
+### Models
+Mongoose models define persisted domain structures and indexes. Important models include User, Household, Membership, Chore, and RecurringChoreTemplate.
 
----
+## Authentication and authorization
 
-## Middleware
+Authentication uses JWTs. Protected routes use the authentication middleware to resolve the current user.
 
-Middleware performs work before controllers execute.
+Authorization is household-scoped and based on Membership records. The current roles are Admin and Member. Admin-only actions must verify the user's role in the target household rather than trusting a role supplied by the client.
 
-Examples:
+## Chore model
 
-* Authentication
-* Rate Limiting
-* Input Validation
-* Logging (Future)
+A Chore is an actual chore record. It may be a one-time chore or a generated occurrence linked to a recurring template. Historical occurrences are retained rather than resetting a single document for every recurrence.
 
-Middleware should not contain business logic.
+## Recurring-chore architecture
 
----
+```text
+RecurringChoreTemplate
+        |
+        v
+Recurrence calculation
+        |
+        v
+Assignment selection
+        |
+        v
+Chore occurrence
+        |
+        v
+Member completion / review
+```
 
-## Controllers
+The template stores recurrence and assignment rules. Each generated Chore stores the occurrence's identity and its own snapshot of the chore details.
 
-Controllers coordinate application flow.
+The scheduler runs after MongoDB connects. The server performs an initial scheduler tick and then starts the recurring scheduler loop. The scheduler uses atomic claims and time-limited leases to avoid processing the same due template concurrently. Catch-up is bounded to avoid unbounded historical generation.
 
-Responsibilities:
+## Design principles
 
-* Validate request
-* Call business logic
-* Return response
+- Preserve historical records.
+- Keep household authorization explicit.
+- Make recurring generation idempotent.
+- Keep scheduler failures isolated by template.
+- Keep controllers focused on request/response coordination.
+- Avoid adding infrastructure before the product requirements need it.
 
-Controllers should remain lightweight.
+## Planned domains
 
----
+The following are roadmap items, not currently implemented subsystems:
 
-## Services (Future)
-
-Services contain business logic.
-
-Examples:
-
-Calendar Engine
-
-Rotation Engine
-
-Notification Service
-
-Workload Balancer
-
-Controllers should eventually delegate complex operations to services.
-
----
-
-## Models
-
-Models define database structure.
-
-Each model should represent one domain concept.
-
-Examples:
-
-User
-
-Household
-
-Membership
-
-Availability
-
-Chore Template
-
-Chore Instance
-
-Report
-
-Audit Log
-
----
-
-# Authentication Flow
-
-User Login
-
-↓
-
-Password Verification
-
-↓
-
-Generate JWT
-
-↓
-
-Client Stores Token
-
-↓
-
-Protected Requests
-
-↓
-
-Auth Middleware
-
-↓
-
-Controller
-
----
-
-# Authorization
-
-Authorization is household based.
-
-Permissions are determined using Membership records.
-
-Roles:
-
-Admin
-
-Member
-
-Future:
-
-Moderator (Optional)
-
----
-
-# Recurring Chore Architecture
-
-Recurring chores are separated into two parts.
-
-Template
-
-↓
-
-Calendar Engine
-
-↓
-
-Chore Instance
-
-↓
-
-Member Completion
-
-↓
-
-Reports
-
-↓
-
-Leaderboards
-
-↓
-
-Statistics
-
-The template defines recurring behavior.
-
-Instances preserve history.
-
----
-
-# Rotation Architecture
-
-Rotation Engine
-
-↓
-
-Checks Available Members
-
-↓
-
-Determines Next Assignment
-
-↓
-
-Returns Assignment
-
-↓
-
-Calendar Engine Creates Instance
-
-The Rotation Engine does not create chores.
-
-It only determines assignment.
-
----
-
-# Workload Balancing
-
-If members become unavailable:
-
-Availability
-
-↓
-
-Workload Balancer
-
-↓
-
-Suggested Distribution
-
-↓
-
-Admin Review (Optional)
-
-↓
-
-Chore Instances
-
-Automatic balancing should always allow manual admin override.
-
----
-
-# Reporting Architecture
-
-Member
-
-↓
-
-Anonymous Report
-
-↓
-
-Report Queue
-
-↓
-
-Admin Review
-
-↓
-
-Optional Identity Request
-
-↓
-
-Audit Log
-
-Reporter identity is stored securely.
-
-Identity access is logged.
-
----
-
-# Core Principles
-
-Single Responsibility
-
-Each module should perform one responsibility only.
-
-History Preservation
-
-Historical data should never be overwritten.
-
-Automation
-
-Automate repetitive work while keeping important decisions under human control.
-
-Fairness
-
-Workloads should remain balanced whenever possible.
-
-Transparency
-
-Users should understand why decisions were made.
-
-Accountability
-
-Sensitive actions should always leave an audit trail.
-
----
-
-# Future Architecture
-
-As TaskForce grows, additional services will be introduced.
-
-Examples:
-
-Notification Service
-
-Statistics Service
-
-Leaderboard Service
-
-Reminder Scheduler
-
-Calendar Engine
-
-Rotation Engine
-
-Workload Balancer
-
-These services should remain independent and communicate through well-defined interfaces rather than tightly coupling business logic across controllers.
+- Notifications
+- Proof uploads
+- Activity feed and audit logs
+- Reports and anonymous reporting
+- Analytics and leaderboards
+- Workload redistribution based on availability
