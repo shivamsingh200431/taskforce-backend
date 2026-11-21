@@ -67,35 +67,30 @@ All household, chore, and recurring-chore endpoints are authenticated. Household
 
 # Sprint 4 — Chore Review Lifecycle
 
-**Status: In Progress**
+**Status: Implemented; CI verification pending**
 
 ### Implemented
 - Admin approval
 - Admin rejection
-- Feedback
-- Source tracking
-- Household permission checks
-- Assigned-member completion endpoint
-
-### Remaining
-- Distinct needs-improvement state and admin response
-- Member resubmission endpoint
+- Distinct `needs-improvement` approval state
+- Member resubmission from `needs-improvement` or `rejected`
 - Admin re-review after resubmission
-- Explicit allowed-transition rules and regression tests
+- Feedback and persisted `reviewHistory`
+- Assigned-member completion for admin-assigned chores
+- Household, admin, and assigned-member permission checks
+- Explicit transition guards and integration tests
 
-### Implemented routes
+### Routes
 | Method | Endpoint |
 |---|---|
 | PATCH | `/api/chores/:id/approve` |
 | PATCH | `/api/chores/:id/reject` |
+| PATCH | `/api/chores/:id/resubmit` |
 | PATCH | `/api/chores/:id/complete` |
 
-### Proposed route
-| Method | Endpoint | Status |
-|---|---|---|
-| PATCH | `/api/chores/:id/resubmit` | Not implemented |
+The approve endpoint accepts `needsImprovement: true` to move a pending member submission into the distinct `needs-improvement` state. An approval marks a member-submitted chore completed. A rejected or needs-improvement submission can only be resubmitted by its assigned member and returns to `pending` for another admin review.
 
-The current `needsImprovement` request field does not yet provide a separate persisted lifecycle state. The workflow must be designed before adding the resubmission endpoint; do not treat the proposed route as available.
+See [chore-lifecycle.md](chore-lifecycle.md) for the state transitions and [system-workflows.md](system-workflows.md) for system-level behavior.
 
 ---
 
@@ -114,7 +109,7 @@ The current `needsImprovement` request field does not yet provide a separate per
 - Scheduler with atomic claims and processing leases
 - Bounded catch-up and per-template failure isolation
 
-### Implemented routes
+### Routes
 | Method | Endpoint |
 |---|---|
 | POST | `/api/recurring-chores` |
@@ -123,8 +118,6 @@ The current `needsImprovement` request field does not yet provide a separate per
 | PATCH | `/api/recurring-chores/:id` |
 | DELETE | `/api/recurring-chores/:id` |
 | POST | `/api/recurring-chores/:id/generate` |
-
-The recurring-chore routes require authentication. Household membership and admin checks are enforced in the recurring-chore controller/service flow.
 
 ---
 
@@ -191,7 +184,7 @@ No Sprint 7 API routes are implemented yet.
 | Authentication | Completed |
 | Household management | Completed |
 | Basic chore APIs | Implemented |
-| Chore review lifecycle | In progress |
+| Chore review lifecycle | Implemented; CI verification pending |
 | Recurring chore engine | Completed |
 | Collaboration | Planned |
 | Analytics | Planned |
