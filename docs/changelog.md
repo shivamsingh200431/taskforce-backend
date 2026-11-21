@@ -1,9 +1,9 @@
 # Changelog
 
-## v0.5.1 — Release Cleanup
+## Unreleased — Release Cleanup
 
 ### Fixed
-- Server configuration now reads the standard `PORT` environment variable.
+- Server configuration now reads and parses the standard `PORT` environment variable.
 
 ### Changed
 - Refreshed the project README and API roadmap to match implemented endpoints.
