@@ -149,7 +149,7 @@ docs/
 ## Current roadmap
 
 - **Completed:** Authentication, household management, basic chore APIs, recurring chore engine.
-- **Implemented:** Explicit needs-improvement, rejection, resubmission, and review-history workflow (pending CI verification).\n- **In progress:** Final release hardening.
+- **Implemented:** Explicit needs-improvement, rejection, resubmission, and review-history workflow.\n- **In progress:** Final release hardening.
 - **Planned:** Proof uploads, notifications, activity feed, audit logs, analytics, and productivity features.
 
 See [docs/roadmap.md](docs/roadmap.md) and [docs/api-roadmap.md](docs/api-roadmap.md) for the detailed status.
